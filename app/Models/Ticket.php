@@ -140,4 +140,62 @@ class Ticket extends Model
     {
         return $query->whereNull('assigned_agent_id');
     }
+
+    /**
+     * Scope query for active tickets that have breached their SLA resolution target.
+     */
+    public function scopeSlaBreached(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->active()
+            ->whereNotNull('sla_due_at')
+            ->where('sla_due_at', '<=', now());
+    }
+
+    /**
+     * Scope query for active tickets approaching SLA breach (past warning threshold but not yet breached).
+     */
+    public function scopeSlaApproaching(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        $now = now();
+        return $query->active()
+            ->whereNotNull('sla_warning_at')
+            ->where('sla_warning_at', '<=', $now)
+            ->where('sla_due_at', '>', $now);
+    }
+
+    /**
+     * Scope query for active tickets within healthy SLA threshold (before warning threshold).
+     */
+    public function scopeSlaWithin(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->active()
+            ->whereNotNull('sla_warning_at')
+            ->where('sla_warning_at', '>', now());
+    }
+
+    /**
+     * Determine the current SLA compliance status for active tickets.
+     */
+    public function slaStatus(): ?\App\Enums\SlaStatus
+    {
+        if (!$this->sla_due_at) {
+            return null;
+        }
+
+        if (!in_array($this->status->value, TicketStatus::activeValues(), true)) {
+            return null;
+        }
+
+        $now = now();
+
+        if ($now->gte($this->sla_due_at)) {
+            return \App\Enums\SlaStatus::Breached;
+        }
+
+        if ($this->sla_warning_at && $now->gte($this->sla_warning_at)) {
+            return \App\Enums\SlaStatus::Approaching;
+        }
+
+        return \App\Enums\SlaStatus::Within;
+    }
 }

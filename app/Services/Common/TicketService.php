@@ -353,8 +353,8 @@ class TicketService
                 return $ticket;
             }
 
-            // Recalculate SLA resolution and warning targets for the new priority
-            $deadlines = $this->slaService->calculateDeadlines($to);
+            // Recalculate SLA resolution and warning targets for the new priority from ticket creation time
+            $deadlines = $this->slaService->deadlinesFor($to, $ticket->created_at);
 
             $ticket->update([
                 'priority' => $to,
