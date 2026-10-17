@@ -19,8 +19,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
         Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
-        // Administrator Global Tickets
+        // Administrator Global Tickets & Assignment
         Route::get('/tickets', [\App\Http\Controllers\Admin\TicketController::class, 'index'])->name('tickets.index');
         Route::get('/tickets/{ticket}', [\App\Http\Controllers\Admin\TicketController::class, 'show'])->name('tickets.show');
+        Route::post('/tickets/{ticket}/assign', [\App\Http\Controllers\Admin\TicketController::class, 'assign'])->name('tickets.assign');
+        Route::post('/tickets/{ticket}/auto-assign', [\App\Http\Controllers\Admin\TicketController::class, 'autoAssign'])->name('tickets.auto-assign');
     });
 });

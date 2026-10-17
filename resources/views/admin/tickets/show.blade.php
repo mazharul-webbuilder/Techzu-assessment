@@ -167,15 +167,54 @@
 
                 <hr class="my-1 text-light">
 
+                <hr class="my-1 text-light">
+
                 <div>
-                    <span class="text-muted small text-uppercase fw-semibold d-block" style="font-size: 0.72rem; letter-spacing: 0.05em;">Assigned Agent</span>
-                    <div class="mt-1">
+                    <span class="text-muted small text-uppercase fw-semibold d-block mb-1" style="font-size: 0.72rem; letter-spacing: 0.05em;">Assigned Agent</span>
+                    <div class="mb-3">
                         @if($ticket->assignedAgent)
-                            <span class="fw-semibold text-dark small">{{ $ticket->assignedAgent->name }}</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="avatar-circle" style="width: 26px; height: 26px; font-size: 0.7rem;">
+                                    {{ strtoupper(substr($ticket->assignedAgent->name, 0, 1)) }}
+                                </div>
+                                <span class="fw-semibold text-dark small">{{ $ticket->assignedAgent->name }}</span>
+                            </div>
                         @else
-                            <span class="badge badge-soft-warning rounded-pill px-2 py-1">Unassigned</span>
+                            <span class="badge badge-soft-warning rounded-pill px-2 py-1">
+                                <i class="bi bi-person-x me-1"></i>Unassigned
+                            </span>
                         @endif
                     </div>
+
+                    <!-- Manual Assignment Form -->
+                    <form method="POST" action="{{ route('admin.tickets.assign', $ticket) }}" class="mb-2">
+                        @csrf
+                        <label for="agent_id" class="form-label small text-muted fw-semibold mb-1" style="font-size: 0.75rem;">
+                            {{ $ticket->assignedAgent ? 'Reassign Agent' : 'Assign to Agent' }}
+                        </label>
+                        <div class="input-group input-group-sm mb-2">
+                            <select name="agent_id" id="agent_id" class="form-select" required>
+                                <option value="">-- Choose Agent --</option>
+                                @foreach($agents as $agent)
+                                    <option value="{{ $agent->id }}" {{ $ticket->assigned_agent_id === $agent->id ? 'selected' : '' }}>
+                                        {{ $agent->name }} ({{ $agent->active_tickets_count }} active) {{ !$agent->is_available ? '[Away]' : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <button type="submit" class="btn btn-primary px-3">
+                                <i class="bi bi-check-lg"></i> Assign
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Auto-Assign Button -->
+                    <form method="POST" action="{{ route('admin.tickets.auto-assign', $ticket) }}">
+                        @csrf
+                        <button type="submit" class="btn btn-outline-secondary btn-sm w-100 d-inline-flex align-items-center justify-content-center gap-1">
+                            <i class="bi bi-magic text-primary"></i>
+                            <span>Auto-Assign (Least Loaded)</span>
+                        </button>
+                    </form>
                 </div>
 
                 <hr class="my-1 text-light">

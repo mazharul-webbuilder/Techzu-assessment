@@ -109,10 +109,20 @@
 
                     <!-- Action -->
                     <td class="text-end pe-4">
-                        <a href="{{ $showRoute }}" class="btn btn-sm btn-light border text-secondary fw-semibold px-3 rounded-3 shadow-none">
-                            <span>Details</span>
-                            <i class="bi bi-chevron-right ms-1 text-muted" style="font-size: 0.75rem;"></i>
-                        </a>
+                        <div class="d-inline-flex align-items-center gap-2">
+                            @if($portal === 'agent' && $ticket->assigned_agent_id === null)
+                                <form method="POST" action="{{ route('agent.tickets.claim', $ticket) }}" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-primary fw-semibold px-2 py-1 rounded-2 shadow-none" style="font-size: 0.78rem;">
+                                        <i class="bi bi-hand-index-thumb me-1"></i>Claim
+                                    </button>
+                                </form>
+                            @endif
+                            <a href="{{ $showRoute }}" class="btn btn-sm btn-light border text-secondary fw-semibold px-3 rounded-3 shadow-none">
+                                <span>Details</span>
+                                <i class="bi bi-chevron-right ms-1 text-muted" style="font-size: 0.75rem;"></i>
+                            </a>
+                        </div>
                     </td>
                 </tr>
             @empty

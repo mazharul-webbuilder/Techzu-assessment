@@ -36,7 +36,7 @@ class TicketService
      */
     public function create(Customer $customer, array $data): Ticket
     {
-        return DB::transaction(function () use ($customer, $data) {
+        $ticket = DB::transaction(function () use ($customer, $data) {
             $priority = $data['priority'] instanceof Priority
                 ? $data['priority']
                 : Priority::from($data['priority']);
@@ -97,6 +97,13 @@ class TicketService
 
             return $ticket;
         });
+
+        // 6. Trigger automatic workload-based assignment if enabled
+        if (config('helpdesk.auto_assign_on_create', true)) {
+            \App\Jobs\AutoAssignTicketJob::dispatch($ticket);
+        }
+
+        return $ticket;
     }
 
     /**

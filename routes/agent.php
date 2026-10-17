@@ -22,5 +22,9 @@ Route::prefix('agent')->name('agent.')->group(function () {
         // Agent Ticket Queues & Details
         Route::get('/tickets', [\App\Http\Controllers\Agent\TicketController::class, 'index'])->name('tickets.index');
         Route::get('/tickets/{ticket}', [\App\Http\Controllers\Agent\TicketController::class, 'show'])->name('tickets.show');
+        Route::post('/tickets/{ticket}/claim', [\App\Http\Controllers\Agent\TicketController::class, 'claim'])->name('tickets.claim');
+
+        // Agent Availability Toggle
+        Route::post('/availability', [\App\Http\Controllers\Agent\AvailabilityController::class, 'toggle'])->name('availability.toggle');
     });
 });

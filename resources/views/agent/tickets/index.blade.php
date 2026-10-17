@@ -25,10 +25,16 @@
         <h2 class="fw-bold mb-1 display-font text-dark">Ticket Work Queue</h2>
         <p class="text-muted small mb-0">Showing assigned tickets and unassigned queue pool available for triage.</p>
     </div>
-    <div>
-        <span class="badge bg-white text-secondary border px-3 py-2 rounded-3 shadow-sm small">
-            <span class="live-pulse me-1"></span> Live Queue Active
-        </span>
+    <div class="d-flex align-items-center gap-2">
+        <form method="POST" action="{{ route('agent.availability.toggle') }}" class="d-inline">
+            @csrf
+            @php $isAvailable = auth('agent')->user()?->is_available ?? false; @endphp
+            <button type="submit" class="btn btn-sm {{ $isAvailable ? 'btn-outline-success bg-white' : 'btn-outline-secondary bg-white' }} px-3 py-2 rounded-3 shadow-sm d-inline-flex align-items-center gap-2" title="Click to toggle availability for auto-assignment">
+                <span class="{{ $isAvailable ? 'live-pulse' : '' }}" style="{{ !$isAvailable ? 'width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; display: inline-block;' : '' }}"></span>
+                <span class="small fw-semibold">{{ $isAvailable ? 'Available for Assignment' : 'Away (Paused)' }}</span>
+                <i class="bi bi-arrow-repeat text-muted ms-1" style="font-size: 0.75rem;"></i>
+            </button>
+        </form>
     </div>
 </div>
 
