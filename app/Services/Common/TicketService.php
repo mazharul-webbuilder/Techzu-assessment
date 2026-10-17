@@ -8,9 +8,14 @@ use App\Enums\TicketStatus;
 use App\Models\Category;
 use App\Models\Customer;
 use App\Models\Ticket;
+use App\Notifications\AgentRepliedNotification;
+use App\Notifications\CustomerRepliedNotification;
+use App\Notifications\TicketCreatedNotification;
+use App\Notifications\TicketResolvedNotification;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 /**
  * Service managing core ticket lifecycle operations and database queries.
@@ -98,7 +103,10 @@ class TicketService
             return $ticket;
         });
 
-        // 6. Trigger automatic workload-based assignment if enabled
+        // 6. Send ticket creation confirmation notification to the customer
+        $ticket->customer->notify(new TicketCreatedNotification($ticket));
+
+        // 7. Trigger automatic workload-based assignment if enabled
         if (config('helpdesk.auto_assign_on_create', true)) {
             \App\Jobs\AutoAssignTicketJob::dispatch($ticket);
         }
@@ -209,7 +217,7 @@ class TicketService
         bool $internal = false,
         array $attachments = []
     ): \App\Models\TicketReply {
-        return DB::transaction(function () use ($ticket, $author, $body, $internal, $attachments) {
+        $reply = DB::transaction(function () use ($ticket, $author, $body, $internal, $attachments) {
             // Security constraint: Customers can NEVER author internal staff notes
             if ($author instanceof Customer) {
                 $internal = false;
@@ -294,6 +302,18 @@ class TicketService
 
             return $reply;
         });
+
+        // 5. Dispatch queued notifications outside the transaction
+        if ($author instanceof Customer) {
+            $recipients = NotificationRecipients::forCustomerReplied($ticket);
+            Notification::send($recipients, new CustomerRepliedNotification($ticket, $reply));
+        } elseif (!$internal) {
+            // Public agent/admin reply notifies the customer
+            $ticket->customer->notify(new AgentRepliedNotification($ticket, $reply));
+        }
+        // Note: Internal notes never trigger customer notifications!
+
+        return $reply;
     }
 
     /**
@@ -303,7 +323,7 @@ class TicketService
      */
     public function changeStatus(Ticket $ticket, TicketStatus $to, \Illuminate\Database\Eloquent\Model $actor): Ticket
     {
-        return DB::transaction(function () use ($ticket, $to, $actor) {
+        $ticket = DB::transaction(function () use ($ticket, $to, $actor) {
             $oldStatus = $ticket->status;
 
             if ($oldStatus === $to) {
@@ -339,6 +359,13 @@ class TicketService
 
             return $ticket;
         });
+
+        // Notify customer when ticket is resolved
+        if ($to === TicketStatus::Resolved) {
+            $ticket->customer->notify(new TicketResolvedNotification($ticket));
+        }
+
+        return $ticket;
     }
 
     /**

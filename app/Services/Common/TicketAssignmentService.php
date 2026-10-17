@@ -8,6 +8,7 @@ use App\Exceptions\TicketAlreadyAssignedException;
 use App\Models\Admin;
 use App\Models\Agent;
 use App\Models\Ticket;
+use App\Notifications\TicketAssignedNotification;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -60,6 +61,8 @@ class TicketAssignmentService
             description: "Ticket claimed by agent {$agent->name}"
         );
 
+        $agent->notify(new TicketAssignedNotification($ticket));
+
         return $ticket;
     }
 
@@ -68,7 +71,7 @@ class TicketAssignmentService
      */
     public function assign(Ticket $ticket, Agent $agent, Admin $by): Ticket
     {
-        return DB::transaction(function () use ($ticket, $agent, $by) {
+        $assignedTicket = DB::transaction(function () use ($ticket, $agent, $by) {
             // Lock row with exclusive lock to prevent concurrent races
             $lockedTicket = Ticket::query()->whereKey($ticket->id)->lockForUpdate()->firstOrFail();
             $oldAgentId = $lockedTicket->assigned_agent_id;
@@ -98,6 +101,10 @@ class TicketAssignmentService
 
             return $lockedTicket;
         });
+
+        $agent->notify(new TicketAssignedNotification($assignedTicket));
+
+        return $assignedTicket;
     }
 
     /**
@@ -173,6 +180,8 @@ class TicketAssignmentService
                 ? "Automatically assigned to {$agent->name} by {$by->name} (workload: {$agent->open_tickets_count} active tickets)"
                 : "Automatically assigned to {$agent->name} (workload: {$agent->open_tickets_count} active tickets)"
         );
+
+        $agent->notify(new TicketAssignedNotification($ticket));
 
         return true;
     }
