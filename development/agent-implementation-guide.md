@@ -393,24 +393,45 @@ Phase 12 - Filters. Follow section 12 of 02-ARCHITECTURE.md.
 
 ---
 
-## Phase 13 - Dashboard
+## Phase 13 - Dashboard & UI/UX Experience
 
 **Prompt**
 
 ```
-Phase 13 - Dashboard. Follow section 12 of 02-ARCHITECTURE.md.
-DashboardService with: one conditional-aggregation query for the counters (open total, unassigned, critical open, breached, approaching,
-resolved total), one GROUP BY priority query, and tickets by agent through Agent::withCount (active tickets).
-Admin dashboard shows all of it as simple cards and tables. Agent dashboard: own workload and own SLA risks.
-Customer dashboard: own counts by status. Add optional Cache::remember for 30 seconds on the admin stats.
-Test: counters match known seeded data; an agent only sees their own numbers. Keep total queries per page small and assert it.
+Phase 13 - Dashboard & Modern UI/UX. Follow section 12 of 02-ARCHITECTURE.md.
+1. Design System & Layout (resources/views/layouts/app.blade.php):
+   - Modern glassmorphism sticky header with live SLA beacon and portal identity badges.
+   - Portal themes: Indigo (Customer), Teal (Agent Workstation), Rose/Crimson (Admin Console).
+   - Elevated stat-card components with subtle hover micro-animations and soft badges.
+   - Interactive Priority Cards with live SLA target calculation for ticket submission.
+
+2. Backend Aggregations (DashboardService / Queries):
+   - One conditional-aggregation query for the counters:
+     (open total, unassigned, critical open, breached, approaching, resolved total)
+   - One GROUP BY priority query, and tickets by agent through Agent::withCount (active tickets).
+   - Query count: 3 or fewer queries total (never 10+ separate count() queries).
+   - Optional: Cache::remember for 30-60 seconds on admin aggregate statistics.
+
+3. Portal Dashboards:
+   - Admin Dashboard: Executive command center with 6 KPI cards, infrastructure capacity, and live ticket stream.
+   - Agent Dashboard: Workload overview (my assigned, unassigned triage pool, approaching SLA risks, personal resolved).
+   - Customer Dashboard: 4 key metrics (submitted, in progress, awaiting customer, resolved), quick search filter, and SLA deadline tracker.
+
+4. Tests: counters match known seeded data; an agent only sees their own numbers; query count per page stays minimal.
 ```
 
-**Done when**
-- [ ] Counter queries are 3 or fewer for the admin dashboard
-- [ ] You can explain conditional aggregation
+**UI/UX Layout Standards**
+- **Typography & Canvas:** Inter + Plus Jakarta Sans with subtle radial ambient gradients on `#f8fafc`.
+- **Card Hierarchy:** Rounded corners (`1rem`), layered drop-shadows, soft borders (`#e2e8f0`).
+- **Interactive Forms:** Split 2-column layout, live SLA guarantee widget, visual radio cards for priorities.
+- **SLA Visualization:** Dynamic colored badges (`badge-soft-*`), live pulsing indicators for active/breached timers.
 
-**Commit:** `feat: dashboard with aggregated queries`
+**Done when**
+- [ ] Layout and forms feel modern, polished, and responsive (no bare default Bootstrap components)
+- [ ] Counter queries are 3 or fewer for the admin dashboard using conditional aggregation
+- [ ] You can explain conditional aggregation (`SUM(CASE WHEN ... THEN 1 ELSE 0 END)`)
+
+**Commit:** `feat: dashboard with aggregated queries and modern UI/UX`
 
 ---
 

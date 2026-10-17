@@ -27,7 +27,7 @@ return new class extends Migration
 
             $table->timestamp('created_at')->nullable();
 
-            $table->index(['ticket_id', 'created_at'], 'idx_ticket_created');
+            $table->index(['ticket_id', 'created_at'], 'idx_ticket_activities_created');
         });
     }
 

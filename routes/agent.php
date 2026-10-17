@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Agent\Auth\AuthController;
+use App\Http\Controllers\Agent\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -16,8 +17,6 @@ Route::prefix('agent')->name('agent.')->group(function () {
 
     Route::middleware('auth:agent')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-        Route::get('/dashboard', function () {
-            return view('agent.dashboard');
-        })->name('dashboard');
+        Route::get('/dashboard', DashboardController::class)->name('dashboard');
     });
 });

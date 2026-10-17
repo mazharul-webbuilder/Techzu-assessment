@@ -27,8 +27,8 @@ return new class extends Migration
             $table->timestamps();
 
             // Composite indexes for chronological conversation view and author lookups
-            $table->index(['ticket_id', 'created_at'], 'idx_ticket_created');
-            $table->index(['author_type', 'author_id'], 'idx_author');
+            $table->index(['ticket_id', 'created_at'], 'idx_ticket_replies_created');
+            $table->index(['author_type', 'author_id'], 'idx_ticket_replies_author');
         });
     }
 

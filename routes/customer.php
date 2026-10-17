@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Customer\Auth\AuthController;
+use App\Http\Controllers\Customer\TicketController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -25,8 +26,12 @@ Route::prefix('customer')->name('customer.')->group(function () {
 
     Route::middleware('auth:customer')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-        Route::get('/dashboard', function () {
-            return view('customer.dashboard');
-        })->name('dashboard');
+
+        // Customer Tickets & Dashboard
+        Route::get('/dashboard', [TicketController::class, 'index'])->name('dashboard');
+        Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
+        Route::get('/tickets/create', [TicketController::class, 'create'])->name('tickets.create');
+        Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
+        Route::get('/tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
     });
 });
