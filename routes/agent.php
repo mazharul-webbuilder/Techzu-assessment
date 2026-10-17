@@ -18,5 +18,9 @@ Route::prefix('agent')->name('agent.')->group(function () {
     Route::middleware('auth:agent')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
         Route::get('/dashboard', DashboardController::class)->name('dashboard');
+
+        // Agent Ticket Queues & Details
+        Route::get('/tickets', [\App\Http\Controllers\Agent\TicketController::class, 'index'])->name('tickets.index');
+        Route::get('/tickets/{ticket}', [\App\Http\Controllers\Agent\TicketController::class, 'show'])->name('tickets.show');
     });
 });

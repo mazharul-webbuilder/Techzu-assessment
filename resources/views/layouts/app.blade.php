@@ -397,6 +397,24 @@
                                 <i class="bi bi-plus-circle"></i> Submit Ticket
                             </a>
                         </div>
+                    @elseif(auth('agent')->check())
+                        <div class="d-none d-md-flex align-items-center gap-2 ms-4">
+                            <a class="app-nav-link {{ request()->routeIs('agent.dashboard') ? 'active' : '' }}" href="{{ route('agent.dashboard') }}">
+                                <i class="bi bi-speedometer2"></i> Dashboard
+                            </a>
+                            <a class="app-nav-link {{ request()->routeIs('agent.tickets.*') ? 'active' : '' }}" href="{{ route('agent.tickets.index') }}">
+                                <i class="bi bi-inbox-fill"></i> Ticket Queue
+                            </a>
+                        </div>
+                    @elseif(auth('admin')->check())
+                        <div class="d-none d-md-flex align-items-center gap-2 ms-4">
+                            <a class="app-nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
+                                <i class="bi bi-speedometer2"></i> Dashboard
+                            </a>
+                            <a class="app-nav-link {{ request()->routeIs('admin.tickets.*') ? 'active' : '' }}" href="{{ route('admin.tickets.index') }}">
+                                <i class="bi bi-ticket-perforated-fill"></i> All Tickets
+                            </a>
+                        </div>
                     @endif
                 </div>
 

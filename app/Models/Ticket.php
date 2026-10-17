@@ -97,4 +97,47 @@ class Ticket extends Model
     {
         return $this->hasMany(TicketActivity::class);
     }
+
+    /**
+     * Scope query to only include tickets visible to the specified actor.
+     *
+     * - Customer: Own tickets only.
+     * - Agent: Assigned tickets or unassigned tickets in the pool.
+     * - Admin: All tickets across the system.
+     */
+    public function scopeVisibleTo(\Illuminate\Database\Eloquent\Builder $query, \Illuminate\Contracts\Auth\Authenticatable|\Illuminate\Database\Eloquent\Model $actor): \Illuminate\Database\Eloquent\Builder
+    {
+        if ($actor instanceof Customer) {
+            return $query->where('customer_id', $actor->id);
+        }
+
+        if ($actor instanceof Agent) {
+            return $query->where(function ($q) use ($actor) {
+                $q->where('assigned_agent_id', $actor->id)
+                  ->orWhereNull('assigned_agent_id');
+            });
+        }
+
+        if ($actor instanceof Admin) {
+            return $query;
+        }
+
+        return $query->whereRaw('0 = 1'); // Unauthorized/unknown actor gets empty results
+    }
+
+    /**
+     * Scope query to only include active tickets that require ongoing handling.
+     */
+    public function scopeActive(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->whereIn('status', TicketStatus::activeValues());
+    }
+
+    /**
+     * Scope query to only include tickets that have no assigned agent.
+     */
+    public function scopeUnassigned(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->whereNull('assigned_agent_id');
+    }
 }

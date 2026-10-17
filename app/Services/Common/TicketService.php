@@ -100,14 +100,23 @@ class TicketService
     }
 
     /**
+     * Get paginated tickets visible to the specified actor.
+     */
+    public function getTicketsForActor(\Illuminate\Contracts\Auth\Authenticatable|\Illuminate\Database\Eloquent\Model $actor, int $perPage = 15): LengthAwarePaginator
+    {
+        return Ticket::query()
+            ->visibleTo($actor)
+            ->with(['customer:id,name', 'category:id,name', 'assignedAgent:id,name'])
+            ->latest()
+            ->paginate($perPage);
+    }
+
+    /**
      * Get paginated tickets submitted by the customer with necessary relationships.
      */
     public function getTicketsForCustomer(Customer $customer, int $perPage = 15): LengthAwarePaginator
     {
-        return Ticket::where('customer_id', $customer->id)
-            ->with(['category:id,name', 'assignedAgent:id,name'])
-            ->latest()
-            ->paginate($perPage);
+        return $this->getTicketsForActor($customer, $perPage);
     }
 
     /**
@@ -123,14 +132,18 @@ class TicketService
     }
 
     /**
-     * Load ticket details, attachments, and chronological activity history.
+     * Load ticket details, attachments, visible replies, and chronological activity history.
      */
-    public function getTicketDetails(Ticket $ticket): Ticket
+    public function getTicketDetails(Ticket $ticket, ?\Illuminate\Contracts\Auth\Authenticatable $actor = null): Ticket
     {
         return $ticket->load([
+            'customer:id,name',
             'category:id,name',
             'assignedAgent:id,name',
             'attachments',
+            'replies' => fn ($q) => $actor
+                ? $q->visibleTo($actor)->with(['author', 'attachments'])->oldest()
+                : $q->with(['author', 'attachments'])->oldest(),
             'activities' => fn ($q) => $q->latest('created_at'),
             'activities.actor',
         ]);

@@ -60,10 +60,10 @@ class TicketController extends Controller
      */
     public function show(Ticket $ticket): View
     {
-        // Enforce strict customer isolation: return 404 if ticket belongs to another customer
-        abort_unless($ticket->customer_id === auth('customer')->id(), 404);
+        $this->authorize('view', $ticket);
 
-        $ticket = $this->ticketService->getTicketDetails($ticket);
+        $customer = auth('customer')->user();
+        $ticket = $this->ticketService->getTicketDetails($ticket, $customer);
 
         return view('customer.tickets.show', compact('ticket'));
     }

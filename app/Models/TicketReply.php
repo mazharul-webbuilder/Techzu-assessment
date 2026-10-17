@@ -53,4 +53,19 @@ class TicketReply extends Model
     {
         return $this->hasMany(Attachment::class, 'reply_id');
     }
+
+    /**
+     * Scope query to only include replies visible to the specified actor.
+     *
+     * Customers NEVER see internal staff notes at the database query level.
+     * Staff agents and administrators can view all public replies and internal notes.
+     */
+    public function scopeVisibleTo(\Illuminate\Database\Eloquent\Builder $query, \Illuminate\Contracts\Auth\Authenticatable|\Illuminate\Database\Eloquent\Model $actor): \Illuminate\Database\Eloquent\Builder
+    {
+        if ($actor instanceof Customer) {
+            return $query->where('is_internal', false);
+        }
+
+        return $query;
+    }
 }
