@@ -19,12 +19,13 @@
                     @php
                         $eventIcon = match($activity->event->value ?? '') {
                             'created' => ['icon' => 'bi-plus-circle-fill', 'color' => '#4f46e5', 'bg' => '#eef2ff'],
-                            'reply_added' => ['icon' => 'bi-chat-dots-fill', 'color' => '#0284c7', 'bg' => '#f0f9ff'],
+                            'replied', 'reply_added' => ['icon' => 'bi-chat-dots-fill', 'color' => '#0284c7', 'bg' => '#f0f9ff'],
+                            'internal_note_added' => ['icon' => 'bi-lock-fill', 'color' => '#8b5cf6', 'bg' => '#f5f3ff'],
                             'status_changed' => ['icon' => 'bi-arrow-repeat', 'color' => '#d97706', 'bg' => '#fffbeb'],
                             'priority_changed' => ['icon' => 'bi-flag-fill', 'color' => '#e11d48', 'bg' => '#fff1f2'],
-                            'assigned' => ['icon' => 'bi-person-check-fill', 'color' => '#059669', 'bg' => '#ecfdf5'],
-                            'sla_warning' => ['icon' => 'bi-exclamation-triangle-fill', 'color' => '#d97706', 'bg' => '#fffbeb'],
-                            'sla_breached' => ['icon' => 'bi-x-circle-fill', 'color' => '#dc2626', 'bg' => '#fef2f2'],
+                            'assigned', 'reassigned' => ['icon' => 'bi-person-check-fill', 'color' => '#059669', 'bg' => '#ecfdf5'],
+                            'sla_warning' => ['icon' => 'bi-hourglass-split', 'color' => '#d97706', 'bg' => '#fffbeb'],
+                            'escalated', 'sla_breached' => ['icon' => 'bi-shield-fill-exclamation', 'color' => '#dc2626', 'bg' => '#fef2f2'],
                             default => ['icon' => 'bi-check2', 'color' => '#64748b', 'bg' => '#f1f5f9'],
                         };
                     @endphp

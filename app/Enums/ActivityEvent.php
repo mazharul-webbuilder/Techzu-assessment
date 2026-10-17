@@ -17,6 +17,7 @@ enum ActivityEvent: string
     case PriorityChanged = 'priority_changed';
     case Replied = 'replied';
     case InternalNoteAdded = 'internal_note_added';
+    case SlaWarning = 'sla_warning';
     case Escalated = 'escalated';
 
     /**
@@ -32,6 +33,7 @@ enum ActivityEvent: string
             self::PriorityChanged => 'Priority Changed',
             self::Replied => 'Reply Added',
             self::InternalNoteAdded => 'Internal Note Added',
+            self::SlaWarning => 'SLA Warning Reached',
             self::Escalated => 'Ticket Escalated',
         };
     }

@@ -36,6 +36,12 @@
                 @include('tickets._badge_status', ['status' => $ticket->status])
                 @include('tickets._badge_priority', ['priority' => $ticket->priority])
 
+                @if($ticket->escalated_at)
+                    <span class="badge bg-danger text-white rounded-pill px-2 py-1" title="Escalated: {{ $ticket->escalated_at }}">
+                        <i class="bi bi-shield-fill-exclamation me-1"></i> Escalated
+                    </span>
+                @endif
+
                 @if($isBreached)
                     <span class="badge badge-soft-danger rounded-pill px-2 py-1">
                         <span class="live-pulse-danger me-1"></span> SLA Breached

@@ -61,7 +61,14 @@
 
                     <!-- Status Badge -->
                     <td>
-                        @include('tickets._badge_status', ['status' => $ticket->status])
+                        <div class="d-flex flex-wrap gap-1 align-items-center">
+                            @include('tickets._badge_status', ['status' => $ticket->status])
+                            @if($ticket->escalated_at)
+                                <span class="badge bg-danger rounded-pill px-2 py-1 text-white small" title="Escalated at {{ $ticket->escalated_at }}">
+                                    <i class="bi bi-shield-fill-exclamation me-1"></i>Escalated
+                                </span>
+                            @endif
+                        </div>
                     </td>
 
                     <!-- SLA Target -->
