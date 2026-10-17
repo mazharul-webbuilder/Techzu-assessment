@@ -109,7 +109,7 @@
         </div>
 
         <!-- Conversation & Internal Notes Thread -->
-        @include('tickets._replies_thread', ['replies' => $ticket->replies])
+        @include('tickets._replies_thread', ['replies' => $ticket->replies, 'ticket' => $ticket, 'portal' => 'admin'])
 
         <!-- Activity Timeline -->
         @include('tickets._activity_timeline', ['activities' => $ticket->activities])
@@ -117,6 +117,57 @@
 
     <!-- Right Sidebar Meta -->
     <div class="col-lg-4">
+        <!-- Admin Status & Priority Controls -->
+        <div class="modern-card p-4 mb-4">
+            <h6 class="fw-bold text-dark display-font mb-3 d-flex align-items-center gap-2">
+                <i class="bi bi-gear-fill text-danger"></i>
+                <span>Administrative Actions</span>
+            </h6>
+
+            <!-- Status Transition -->
+            <form method="POST" action="{{ route('admin.tickets.status', $ticket) }}" class="mb-3">
+                @csrf
+                <label for="adminStatusSelect" class="form-label small text-muted fw-semibold d-block mb-1" style="font-size: 0.75rem;">
+                    Status Transition
+                </label>
+                <div class="input-group input-group-sm">
+                    <select name="status" id="adminStatusSelect" class="form-select" required>
+                        <option value="">-- Choose Status --</option>
+                        @foreach(\App\Enums\TicketStatus::cases() as $statusOption)
+                            @if($ticket->status->canTransitionTo($statusOption) && $ticket->status !== $statusOption)
+                                <option value="{{ $statusOption->value }}">{{ $statusOption->label() }}</option>
+                            @endif
+                        @endforeach
+                    </select>
+                    <button type="submit" class="btn btn-danger px-3">
+                        Update
+                    </button>
+                </div>
+            </form>
+
+            <hr class="my-2 text-light">
+
+            <!-- Priority Change -->
+            <form method="POST" action="{{ route('admin.tickets.priority', $ticket) }}">
+                @csrf
+                <label for="adminPrioritySelect" class="form-label small text-muted fw-semibold d-block mb-1" style="font-size: 0.75rem;">
+                    Priority Override
+                </label>
+                <div class="input-group input-group-sm">
+                    <select name="priority" id="adminPrioritySelect" class="form-select" required>
+                        @foreach(\App\Enums\Priority::cases() as $priorityOption)
+                            <option value="{{ $priorityOption->value }}" {{ $ticket->priority === $priorityOption ? 'selected' : '' }}>
+                                {{ $priorityOption->label() }} ({{ $priorityOption->slaMinutes() / 60 }}h SLA)
+                            </option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="btn btn-outline-secondary px-3">
+                        Apply
+                    </button>
+                </div>
+                <span class="text-muted small mt-1 d-block" style="font-size: 0.7rem;">Recalculates SLA deadline automatically.</span>
+            </form>
+        </div>
         <!-- SLA Target Monitor -->
         <div class="modern-card p-4 mb-4">
             <div class="d-flex align-items-center justify-content-between mb-3">

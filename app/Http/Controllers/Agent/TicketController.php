@@ -54,4 +54,56 @@ class TicketController extends Controller
 
         return back()->with('success', "Ticket {$ticket->ticket_number} successfully claimed! It is now in your active workstation.");
     }
+
+    /**
+     * Post a public reply or internal staff note to the ticket.
+     */
+    public function reply(\App\Http\Requests\StoreReplyRequest $request, Ticket $ticket): RedirectResponse
+    {
+        $internal = $request->isInternal();
+
+        if ($internal) {
+            $this->authorize('addNote', $ticket);
+        } else {
+            $this->authorize('reply', $ticket);
+        }
+
+        $agent = $request->user('agent');
+        $this->ticketService->reply(
+            ticket: $ticket,
+            author: $agent,
+            body: $request->validated('body'),
+            internal: $internal,
+            attachments: $request->file('attachments', [])
+        );
+
+        $msg = $internal ? 'Internal staff note recorded.' : 'Public reply posted to customer.';
+        return back()->with('success', $msg);
+    }
+
+    /**
+     * Change the ticket status according to state machine rules.
+     */
+    public function changeStatus(\App\Http\Requests\ChangeStatusRequest $request, Ticket $ticket): RedirectResponse
+    {
+        $this->authorize('changeStatus', $ticket);
+
+        $agent = auth('agent')->user();
+        $this->ticketService->changeStatus($ticket, $request->statusEnum(), $agent);
+
+        return back()->with('success', "Ticket status updated to {$request->statusEnum()->label()}.");
+    }
+
+    /**
+     * Change ticket priority and recalculate SLA.
+     */
+    public function changePriority(\App\Http\Requests\ChangePriorityRequest $request, Ticket $ticket): RedirectResponse
+    {
+        $this->authorize('changePriority', $ticket);
+
+        $agent = auth('agent')->user();
+        $this->ticketService->changePriority($ticket, $request->priorityEnum(), $agent);
+
+        return back()->with('success', "Priority updated to {$request->priorityEnum()->label()}. SLA targets recalculated.");
+    }
 }

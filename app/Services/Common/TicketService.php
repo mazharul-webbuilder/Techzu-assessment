@@ -155,4 +155,204 @@ class TicketService
             'activities.actor',
         ]);
     }
+
+    /**
+     * Post a reply or staff internal note to a ticket.
+     *
+     * @param Ticket $ticket Target ticket
+     * @param \Illuminate\Database\Eloquent\Model $author Customer, Agent, or Admin
+     * @param string $body Text body of reply
+     * @param bool $internal True for staff internal note (enforced false for customers)
+     * @param array<int, \Illuminate\Http\UploadedFile> $attachments
+     */
+    public function reply(
+        Ticket $ticket,
+        \Illuminate\Database\Eloquent\Model $author,
+        string $body,
+        bool $internal = false,
+        array $attachments = []
+    ): \App\Models\TicketReply {
+        return DB::transaction(function () use ($ticket, $author, $body, $internal, $attachments) {
+            // Security constraint: Customers can NEVER author internal staff notes
+            if ($author instanceof Customer) {
+                $internal = false;
+            }
+
+            // 1. Create the reply
+            $reply = \App\Models\TicketReply::create([
+                'ticket_id' => $ticket->id,
+                'author_type' => $author->getMorphClass(),
+                'author_id' => $author->getKey(),
+                'body' => $body,
+                'is_internal' => $internal,
+            ]);
+
+            // 2. Handle reply attachments if provided
+            if (!empty($attachments) && is_array($attachments)) {
+                $disk = config('helpdesk.attachments.disk', 'local');
+                foreach ($attachments as $file) {
+                    if ($file instanceof \Illuminate\Http\UploadedFile) {
+                        $extension = $file->getClientOriginalExtension() ?: $file->extension();
+                        $filename = \Illuminate\Support\Str::uuid()->toString() . '.' . $extension;
+                        $path = $file->storeAs("tickets/{$ticket->id}", $filename, $disk);
+
+                        $reply->attachments()->create([
+                            'ticket_id' => $ticket->id,
+                            'uploaded_by_type' => $author->getMorphClass(),
+                            'uploaded_by_id' => $author->getKey(),
+                            'disk' => $disk,
+                            'path' => $path,
+                            'original_name' => $file->getClientOriginalName(),
+                            'mime_type' => $file->getMimeType() ?: $file->getClientMimeType(),
+                            'size_bytes' => $file->getSize(),
+                        ]);
+                    }
+                }
+            }
+
+            // 3. Customer response lifecycle side-effects:
+            // - Customer reply on waiting_for_customer moves the ticket to in_progress
+            // - Customer reply on resolved reopens the ticket (in_progress if assigned, else open)
+            if ($author instanceof Customer) {
+                if ($ticket->status === TicketStatus::WaitingForCustomer) {
+                    $oldStatus = $ticket->status;
+                    $ticket->update(['status' => TicketStatus::InProgress]);
+                    $this->activityLogger->log(
+                        ticket: $ticket,
+                        event: ActivityEvent::StatusChanged,
+                        actor: $author,
+                        old: ['status' => $oldStatus->value],
+                        new: ['status' => TicketStatus::InProgress->value],
+                        description: "Status automatically moved to In Progress upon customer response"
+                    );
+                } elseif ($ticket->status === TicketStatus::Resolved) {
+                    $oldStatus = $ticket->status;
+                    $newStatus = $ticket->assigned_agent_id ? TicketStatus::InProgress : TicketStatus::Open;
+                    $ticket->update([
+                        'status' => $newStatus,
+                        'resolved_at' => null,
+                    ]);
+                    $this->activityLogger->log(
+                        ticket: $ticket,
+                        event: ActivityEvent::StatusChanged,
+                        actor: $author,
+                        old: ['status' => $oldStatus->value],
+                        new: ['status' => $newStatus->value],
+                        description: "Ticket reopened by customer response"
+                    );
+                }
+            }
+
+            // 4. Record audit activity
+            $this->activityLogger->log(
+                ticket: $ticket,
+                event: $internal ? ActivityEvent::InternalNoteAdded : ActivityEvent::Replied,
+                actor: $author,
+                old: [],
+                new: ['reply_id' => $reply->id, 'is_internal' => $internal],
+                description: $internal
+                    ? "Internal note added by {$author->name}"
+                    : "Public reply posted by {$author->name}"
+            );
+
+            return $reply;
+        });
+    }
+
+    /**
+     * Transition ticket status following the state machine rules.
+     *
+     * @throws \App\Exceptions\InvalidStatusTransitionException
+     */
+    public function changeStatus(Ticket $ticket, TicketStatus $to, \Illuminate\Database\Eloquent\Model $actor): Ticket
+    {
+        return DB::transaction(function () use ($ticket, $to, $actor) {
+            $oldStatus = $ticket->status;
+
+            if ($oldStatus === $to) {
+                return $ticket;
+            }
+
+            if (!$oldStatus->canTransitionTo($to)) {
+                throw new \App\Exceptions\InvalidStatusTransitionException(
+                    "Cannot transition ticket status from '{$oldStatus->label()}' to '{$to->label()}'."
+                );
+            }
+
+            $updates = ['status' => $to];
+
+            if ($to === TicketStatus::Resolved) {
+                $updates['resolved_at'] = now();
+            } elseif ($to === TicketStatus::Closed) {
+                $updates['closed_at'] = now();
+            } elseif ($to === TicketStatus::InProgress && $oldStatus === TicketStatus::Resolved) {
+                $updates['resolved_at'] = null; // Reopening
+            }
+
+            $ticket->update($updates);
+
+            $this->activityLogger->log(
+                ticket: $ticket,
+                event: ActivityEvent::StatusChanged,
+                actor: $actor,
+                old: ['status' => $oldStatus->value],
+                new: ['status' => $to->value],
+                description: "Status changed from {$oldStatus->label()} to {$to->label()} by {$actor->name}"
+            );
+
+            return $ticket;
+        });
+    }
+
+    /**
+     * Change ticket priority, recalculating SLA targets and resetting warning flags.
+     */
+    public function changePriority(Ticket $ticket, Priority $to, \Illuminate\Database\Eloquent\Model $actor): Ticket
+    {
+        return DB::transaction(function () use ($ticket, $to, $actor) {
+            $oldPriority = $ticket->priority;
+
+            if ($oldPriority === $to) {
+                return $ticket;
+            }
+
+            // Recalculate SLA resolution and warning targets for the new priority
+            $deadlines = $this->slaService->calculateDeadlines($to);
+
+            $ticket->update([
+                'priority' => $to,
+                'sla_due_at' => $deadlines['sla_due_at'],
+                'sla_warning_at' => $deadlines['sla_warning_at'],
+                'sla_warning_notified_at' => null,
+                'sla_breach_notified_at' => null,
+            ]);
+
+            $this->activityLogger->log(
+                ticket: $ticket,
+                event: ActivityEvent::PriorityChanged,
+                actor: $actor,
+                old: ['priority' => $oldPriority->value],
+                new: ['priority' => $to->value],
+                description: "Priority updated from {$oldPriority->label()} to {$to->label()} by {$actor->name}"
+            );
+
+            return $ticket;
+        });
+    }
+
+    /**
+     * Mark ticket as resolved.
+     */
+    public function resolve(Ticket $ticket, \Illuminate\Database\Eloquent\Model $actor): Ticket
+    {
+        return $this->changeStatus($ticket, TicketStatus::Resolved, $actor);
+    }
+
+    /**
+     * Mark ticket as closed.
+     */
+    public function close(Ticket $ticket, \Illuminate\Database\Eloquent\Model $actor): Ticket
+    {
+        return $this->changeStatus($ticket, TicketStatus::Closed, $actor);
+    }
 }

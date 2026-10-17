@@ -24,5 +24,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/tickets/{ticket}', [\App\Http\Controllers\Admin\TicketController::class, 'show'])->name('tickets.show');
         Route::post('/tickets/{ticket}/assign', [\App\Http\Controllers\Admin\TicketController::class, 'assign'])->name('tickets.assign');
         Route::post('/tickets/{ticket}/auto-assign', [\App\Http\Controllers\Admin\TicketController::class, 'autoAssign'])->name('tickets.auto-assign');
+        Route::post('/tickets/{ticket}/reply', [\App\Http\Controllers\Admin\TicketController::class, 'reply'])->name('tickets.reply');
+        Route::post('/tickets/{ticket}/status', [\App\Http\Controllers\Admin\TicketController::class, 'changeStatus'])->name('tickets.status');
+        Route::post('/tickets/{ticket}/priority', [\App\Http\Controllers\Admin\TicketController::class, 'changePriority'])->name('tickets.priority');
     });
 });

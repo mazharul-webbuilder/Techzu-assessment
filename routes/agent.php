@@ -23,6 +23,9 @@ Route::prefix('agent')->name('agent.')->group(function () {
         Route::get('/tickets', [\App\Http\Controllers\Agent\TicketController::class, 'index'])->name('tickets.index');
         Route::get('/tickets/{ticket}', [\App\Http\Controllers\Agent\TicketController::class, 'show'])->name('tickets.show');
         Route::post('/tickets/{ticket}/claim', [\App\Http\Controllers\Agent\TicketController::class, 'claim'])->name('tickets.claim');
+        Route::post('/tickets/{ticket}/reply', [\App\Http\Controllers\Agent\TicketController::class, 'reply'])->name('tickets.reply');
+        Route::post('/tickets/{ticket}/status', [\App\Http\Controllers\Agent\TicketController::class, 'changeStatus'])->name('tickets.status');
+        Route::post('/tickets/{ticket}/priority', [\App\Http\Controllers\Agent\TicketController::class, 'changePriority'])->name('tickets.priority');
 
         // Agent Availability Toggle
         Route::post('/availability', [\App\Http\Controllers\Agent\AvailabilityController::class, 'toggle'])->name('availability.toggle');

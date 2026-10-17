@@ -75,4 +75,56 @@ class TicketController extends Controller
 
         return back()->with('error', 'Auto-assignment could not complete: No available agents in pool or ticket already assigned.');
     }
+
+    /**
+     * Post a public reply or internal staff note to the ticket discussion.
+     */
+    public function reply(\App\Http\Requests\StoreReplyRequest $request, Ticket $ticket): RedirectResponse
+    {
+        $internal = $request->isInternal();
+
+        if ($internal) {
+            $this->authorize('addNote', $ticket);
+        } else {
+            $this->authorize('reply', $ticket);
+        }
+
+        $admin = $request->user('admin');
+        $this->ticketService->reply(
+            ticket: $ticket,
+            author: $admin,
+            body: $request->validated('body'),
+            internal: $internal,
+            attachments: $request->file('attachments', [])
+        );
+
+        $msg = $internal ? 'Internal staff note recorded.' : 'Public reply posted to customer.';
+        return back()->with('success', $msg);
+    }
+
+    /**
+     * Change ticket status according to state machine rules.
+     */
+    public function changeStatus(\App\Http\Requests\ChangeStatusRequest $request, Ticket $ticket): RedirectResponse
+    {
+        $this->authorize('changeStatus', $ticket);
+
+        $admin = auth('admin')->user();
+        $this->ticketService->changeStatus($ticket, $request->statusEnum(), $admin);
+
+        return back()->with('success', "Ticket status updated to {$request->statusEnum()->label()}.");
+    }
+
+    /**
+     * Change ticket priority and recalculate SLA targets.
+     */
+    public function changePriority(\App\Http\Requests\ChangePriorityRequest $request, Ticket $ticket): RedirectResponse
+    {
+        $this->authorize('changePriority', $ticket);
+
+        $admin = auth('admin')->user();
+        $this->ticketService->changePriority($ticket, $request->priorityEnum(), $admin);
+
+        return back()->with('success', "Priority updated to {$request->priorityEnum()->label()}. SLA targets recalculated.");
+    }
 }

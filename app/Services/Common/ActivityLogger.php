@@ -38,8 +38,8 @@ class ActivityLogger
             'actor_type' => $actor ? $actor->getMorphClass() : null,
             'actor_id' => $actor?->getKey(),
             'event' => $event,
-            'old_value' => !empty($old) ? $old : null,
-            'new_value' => !empty($new) ? $new : null,
+            'old_values' => !empty($old) ? $old : null,
+            'new_values' => !empty($new) ? $new : null,
             'description' => $description,
         ]);
     }

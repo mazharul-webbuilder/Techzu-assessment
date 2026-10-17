@@ -67,4 +67,36 @@ class TicketController extends Controller
 
         return view('customer.tickets.show', compact('ticket'));
     }
+
+    /**
+     * Post a public reply to the ticket discussion.
+     */
+    public function reply(\App\Http\Requests\StoreReplyRequest $request, Ticket $ticket): RedirectResponse
+    {
+        $this->authorize('reply', $ticket);
+
+        $customer = $request->user('customer');
+        $this->ticketService->reply(
+            ticket: $ticket,
+            author: $customer,
+            body: $request->validated('body'),
+            internal: false, // Customers can NEVER post internal notes
+            attachments: $request->file('attachments', [])
+        );
+
+        return back()->with('success', 'Your reply has been posted successfully.');
+    }
+
+    /**
+     * Customer confirms resolution and closes the resolved ticket.
+     */
+    public function close(Ticket $ticket): RedirectResponse
+    {
+        $this->authorize('changeStatus', $ticket);
+
+        $customer = auth('customer')->user();
+        $this->ticketService->close($ticket, $customer);
+
+        return back()->with('success', 'Ticket has been marked as Closed. Thank you for your feedback!');
+    }
 }
