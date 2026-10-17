@@ -127,6 +127,43 @@ class TicketService
     }
 
     /**
+     * Get paginated tickets for agent with tabbed queue filtering.
+     *
+     * @param \App\Models\Agent $agent Authenticated support agent
+     * @param string|null $tab 'my', 'unassigned', or 'all'
+     * @param int $perPage Items per page
+     */
+    public function getTicketsForAgent(\App\Models\Agent $agent, ?string $tab = null, int $perPage = 15): LengthAwarePaginator
+    {
+        $query = Ticket::query()->visibleTo($agent);
+
+        if ($tab === 'my') {
+            $query->where('assigned_agent_id', $agent->id);
+        } elseif ($tab === 'unassigned') {
+            $query->whereNull('assigned_agent_id');
+        }
+
+        return $query->with(['customer:id,name', 'category:id,name', 'assignedAgent:id,name'])
+            ->latest()
+            ->paginate($perPage)
+            ->withQueryString();
+    }
+
+    /**
+     * Get queue counters for an agent's workstation tabs.
+     *
+     * @return array{my: int, unassigned: int, all: int}
+     */
+    public function getAgentQueueCounts(\App\Models\Agent $agent): array
+    {
+        return [
+            'my' => Ticket::query()->where('assigned_agent_id', $agent->id)->count(),
+            'unassigned' => Ticket::query()->whereNull('assigned_agent_id')->count(),
+            'all' => Ticket::query()->visibleTo($agent)->count(),
+        ];
+    }
+
+    /**
      * Get all active categories for ticket submission.
      *
      * @return Collection<int, Category>

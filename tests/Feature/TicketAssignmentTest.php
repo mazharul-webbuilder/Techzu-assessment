@@ -337,4 +337,52 @@ class TicketAssignmentTest extends TestCase
             return $job->ticket->id === $ticket->id;
         });
     }
+
+    public function test_agent_workstation_tab_filters_assigned_and_unassigned_pool(): void
+    {
+        // 1 ticket assigned to Agent 1
+        $myTicket = Ticket::create([
+            'ticket_number' => 'TKT-2026-000077',
+            'customer_id' => $this->customer->id,
+            'category_id' => $this->category->id,
+            'subject' => 'My Assigned Ticket',
+            'description' => 'Mine.',
+            'priority' => Priority::Low,
+            'status' => TicketStatus::InProgress,
+            'assigned_agent_id' => $this->agent1->id,
+        ]);
+
+        // 1 unassigned ticket
+        $unassignedTicket = Ticket::create([
+            'ticket_number' => 'TKT-2026-000078',
+            'customer_id' => $this->customer->id,
+            'category_id' => $this->category->id,
+            'subject' => 'Unassigned Ticket In Pool',
+            'description' => 'Waiting for claim.',
+            'priority' => Priority::Low,
+            'status' => TicketStatus::Open,
+            'assigned_agent_id' => null,
+        ]);
+
+        // Tab: My Assigned -> sees My Ticket, does NOT see Unassigned
+        $myResponse = $this->actingAs($this->agent1, 'agent')
+            ->get(route('agent.tickets.index', ['tab' => 'my']));
+        $myResponse->assertOk();
+        $myResponse->assertSee($myTicket->ticket_number);
+        $myResponse->assertDontSee($unassignedTicket->ticket_number);
+
+        // Tab: Unassigned Pool -> sees Unassigned, does NOT see My Ticket
+        $unassignedResponse = $this->actingAs($this->agent1, 'agent')
+            ->get(route('agent.tickets.index', ['tab' => 'unassigned']));
+        $unassignedResponse->assertOk();
+        $unassignedResponse->assertSee($unassignedTicket->ticket_number);
+        $unassignedResponse->assertDontSee($myTicket->ticket_number);
+
+        // Tab: All Queue -> sees both
+        $allResponse = $this->actingAs($this->agent1, 'agent')
+            ->get(route('agent.tickets.index', ['tab' => 'all']));
+        $allResponse->assertOk();
+        $allResponse->assertSee($myTicket->ticket_number);
+        $allResponse->assertSee($unassignedTicket->ticket_number);
+    }
 }
