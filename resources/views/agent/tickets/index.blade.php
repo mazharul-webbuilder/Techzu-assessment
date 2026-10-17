@@ -70,6 +70,7 @@
         <span class="text-muted small">Showing {{ $tickets->total() }} tickets</span>
     </div>
 
+    @include('tickets._filter_bar', ['portal' => 'agent', 'categories' => $categories])
     @include('tickets._ticket_table', ['tickets' => $tickets, 'portal' => 'agent'])
 </div>
 @endsection

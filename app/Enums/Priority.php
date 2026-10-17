@@ -16,6 +16,16 @@ enum Priority: string
     case Critical = 'critical';
 
     /**
+     * All priority enum string values.
+     *
+     * @return list<string>
+     */
+    public static function values(): array
+    {
+        return array_column(self::cases(), 'value');
+    }
+
+    /**
      * Human-readable label for UI badges and filters.
      */
     public function label(): string

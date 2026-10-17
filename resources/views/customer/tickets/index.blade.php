@@ -100,30 +100,33 @@
 
 <!-- Tickets Table Section -->
 <div class="modern-card">
-    <div class="p-3 px-4 border-bottom bg-white d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
+    <div class="p-3 px-4 border-bottom bg-white d-flex align-items-center justify-content-between">
         <div class="d-flex align-items-center gap-2">
-            <h5 class="fw-bold mb-0 text-dark display-font fs-6">Recent Tickets</h5>
+            <h5 class="fw-bold mb-0 text-dark display-font fs-6">Support Tickets</h5>
             <span class="badge badge-soft-primary rounded-pill px-2 py-1">{{ $tickets->total() }} total</span>
         </div>
-        <div class="d-flex align-items-center gap-2">
-            <div class="input-group input-group-sm" style="max-width: 250px;">
-                <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-search"></i></span>
-                <input type="text" class="form-control border-start-0 ps-0" placeholder="Filter tickets..." id="ticketSearchInput" onkeyup="filterTicketsTable()">
-            </div>
-        </div>
     </div>
+    @include('tickets._filter_bar', ['portal' => 'customer', 'categories' => $categories])
 
     @if($tickets->isEmpty())
         <div class="text-center py-5 px-4">
             <div class="mx-auto mb-3 d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 72px; height: 72px; background: rgba(79, 70, 229, 0.08); color: #4f46e5; font-size: 2rem;">
                 <i class="bi bi-inbox"></i>
             </div>
-            <h5 class="fw-bold text-dark display-font">No tickets created yet</h5>
-            <p class="text-muted small mb-4 mx-auto" style="max-width: 420px;">Whenever you need assistance, submit a ticket and our support team will respond within the guaranteed SLA window.</p>
-            <a href="{{ route('customer.tickets.create') }}" class="btn btn-portal-primary d-inline-flex align-items-center gap-2">
-                <i class="bi bi-plus-lg"></i>
-                <span>Create Your First Ticket</span>
-            </a>
+            @if(request()->hasAny(['search', 'status', 'priority', 'category_id']))
+                <h5 class="fw-bold text-dark display-font">No tickets match your filters</h5>
+                <p class="text-muted small mb-4 mx-auto" style="max-width: 420px;">Try clearing or adjusting your search keywords and filter criteria.</p>
+                <a href="{{ route('customer.tickets.index') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-x-circle me-1"></i> Clear Filters
+                </a>
+            @else
+                <h5 class="fw-bold text-dark display-font">No tickets created yet</h5>
+                <p class="text-muted small mb-4 mx-auto" style="max-width: 420px;">Whenever you need assistance, submit a ticket and our support team will respond within the guaranteed SLA window.</p>
+                <a href="{{ route('customer.tickets.create') }}" class="btn btn-portal-primary d-inline-flex align-items-center gap-2">
+                    <i class="bi bi-plus-lg"></i>
+                    <span>Create Your First Ticket</span>
+                </a>
+            @endif
         </div>
     @else
         <div class="table-responsive">

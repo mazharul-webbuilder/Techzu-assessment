@@ -24,11 +24,16 @@ use Illuminate\Support\Facades\Notification;
  */
 class TicketService
 {
+    protected TicketFilter $ticketFilter;
+
     public function __construct(
         protected TicketNumberGenerator $numberGenerator,
         protected SlaService $slaService,
-        protected ActivityLogger $activityLogger
-    ) {}
+        protected ActivityLogger $activityLogger,
+        ?TicketFilter $ticketFilter = null
+    ) {
+        $this->ticketFilter = $ticketFilter ?? app(TicketFilter::class);
+    }
 
     /**
      * Create a new support ticket submitted by a customer.
@@ -115,34 +120,50 @@ class TicketService
     }
 
     /**
-     * Get paginated tickets visible to the specified actor.
+     * Get paginated tickets visible to the specified actor with multi-criteria filtering.
+     *
+     * @param array<string, mixed> $filters Validated query filters
      */
-    public function getTicketsForActor(\Illuminate\Contracts\Auth\Authenticatable|\Illuminate\Database\Eloquent\Model $actor, int $perPage = 15): LengthAwarePaginator
-    {
-        return Ticket::query()
-            ->visibleTo($actor)
-            ->with(['customer:id,name', 'category:id,name', 'assignedAgent:id,name'])
+    public function getTicketsForActor(
+        \Illuminate\Contracts\Auth\Authenticatable|\Illuminate\Database\Eloquent\Model $actor,
+        array $filters = [],
+        int $perPage = 15
+    ): LengthAwarePaginator {
+        $query = Ticket::query()->visibleTo($actor);
+
+        $this->ticketFilter->apply($query, $filters);
+
+        return $query
+            ->with(['customer:id,name,email', 'category:id,name', 'assignedAgent:id,name'])
             ->latest()
-            ->paginate($perPage);
+            ->paginate($perPage)
+            ->withQueryString();
     }
 
     /**
-     * Get paginated tickets submitted by the customer with necessary relationships.
+     * Get paginated tickets submitted by the customer with necessary relationships and filters.
+     *
+     * @param array<string, mixed> $filters Validated query filters
      */
-    public function getTicketsForCustomer(Customer $customer, int $perPage = 15): LengthAwarePaginator
+    public function getTicketsForCustomer(Customer $customer, array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        return $this->getTicketsForActor($customer, $perPage);
+        return $this->getTicketsForActor($customer, $filters, $perPage);
     }
 
     /**
-     * Get paginated tickets for agent with tabbed queue filtering.
+     * Get paginated tickets for agent with tabbed queue filtering and search filters.
      *
      * @param \App\Models\Agent $agent Authenticated support agent
      * @param string|null $tab 'my', 'unassigned', or 'all'
+     * @param array<string, mixed> $filters Validated query filters
      * @param int $perPage Items per page
      */
-    public function getTicketsForAgent(\App\Models\Agent $agent, ?string $tab = null, int $perPage = 15): LengthAwarePaginator
-    {
+    public function getTicketsForAgent(
+        \App\Models\Agent $agent,
+        ?string $tab = null,
+        array $filters = [],
+        int $perPage = 15
+    ): LengthAwarePaginator {
         $query = Ticket::query()->visibleTo($agent);
 
         if ($tab === 'my') {
@@ -151,7 +172,10 @@ class TicketService
             $query->whereNull('assigned_agent_id');
         }
 
-        return $query->with(['customer:id,name', 'category:id,name', 'assignedAgent:id,name'])
+        $this->ticketFilter->apply($query, $filters);
+
+        return $query
+            ->with(['customer:id,name,email', 'category:id,name', 'assignedAgent:id,name'])
             ->latest()
             ->paginate($perPage)
             ->withQueryString();

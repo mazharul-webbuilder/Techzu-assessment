@@ -35,6 +35,7 @@
         </div>
     </div>
 
+    @include('tickets._filter_bar', ['portal' => 'admin', 'categories' => $categories, 'agents' => $agents])
     @include('tickets._ticket_table', ['tickets' => $tickets, 'portal' => 'admin'])
 </div>
 @endsection

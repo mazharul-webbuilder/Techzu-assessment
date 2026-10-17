@@ -20,15 +20,16 @@ class TicketController extends Controller
      * Display a listing of tickets visible to the authenticated agent.
      * Uses Ticket::visibleTo() to restrict to assigned or unassigned pool tickets.
      */
-    public function index(\Illuminate\Http\Request $request): View
+    public function index(\App\Http\Requests\TicketIndexRequest $request): View
     {
         $agent = auth('agent')->user();
-        $tab = $request->query('tab', 'all');
+        $tab = $request->validated('tab', 'all') ?: 'all';
 
-        $tickets = $this->ticketService->getTicketsForAgent($agent, $tab);
+        $tickets = $this->ticketService->getTicketsForAgent($agent, $tab, $request->validated());
         $counts = $this->ticketService->getAgentQueueCounts($agent);
+        $categories = $this->ticketService->getActiveCategories();
 
-        return view('agent.tickets.index', compact('tickets', 'tab', 'counts'));
+        return view('agent.tickets.index', compact('tickets', 'tab', 'counts', 'categories'));
     }
 
     /**

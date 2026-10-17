@@ -21,14 +21,15 @@ class TicketController extends Controller
     /**
      * Display a listing of tickets created by the authenticated customer.
      */
-    public function index(): View
+    public function index(\App\Http\Requests\TicketIndexRequest $request): View
     {
         $customer = auth('customer')->user();
 
-        $tickets = $this->ticketService->getTicketsForCustomer($customer);
+        $tickets = $this->ticketService->getTicketsForCustomer($customer, $request->validated());
         $stats = $this->dashboardService->getCustomerStats($customer);
+        $categories = $this->ticketService->getActiveCategories();
 
-        return view('customer.tickets.index', compact('tickets', 'stats'));
+        return view('customer.tickets.index', compact('tickets', 'stats', 'categories'));
     }
 
     /**

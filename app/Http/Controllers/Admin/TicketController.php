@@ -21,12 +21,14 @@ class TicketController extends Controller
     /**
      * Display a listing of all tickets across the system for administrator.
      */
-    public function index(): View
+    public function index(\App\Http\Requests\TicketIndexRequest $request): View
     {
         $admin = auth('admin')->user();
-        $tickets = $this->ticketService->getTicketsForActor($admin);
+        $tickets = $this->ticketService->getTicketsForActor($admin, $request->validated());
+        $categories = $this->ticketService->getActiveCategories();
+        $agents = $this->assignmentService->getAgentsWithWorkload();
 
-        return view('admin.tickets.index', compact('tickets'));
+        return view('admin.tickets.index', compact('tickets', 'categories', 'agents'));
     }
 
     /**

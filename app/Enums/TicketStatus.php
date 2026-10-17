@@ -31,6 +31,16 @@ enum TicketStatus: string
     }
 
     /**
+     * All status enum string values.
+     *
+     * @return list<string>
+     */
+    public static function values(): array
+    {
+        return array_column(self::cases(), 'value');
+    }
+
+    /**
      * Active ticket statuses that require ongoing attention and SLA monitoring.
      * Resolved and closed tickets are considered inactive/completed.
      *
