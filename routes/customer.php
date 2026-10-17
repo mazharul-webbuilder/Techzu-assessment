@@ -3,12 +3,14 @@
 use App\Http\Controllers\Customer\Auth\AuthController;
 use App\Http\Controllers\Customer\TicketController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AttachmentController;
 
 /*
 |--------------------------------------------------------------------------
 | Landing / Home Route
 |--------------------------------------------------------------------------
 */
+
 Route::get('/', function () {
     return view('landing-page');
 })->name('home');
@@ -44,6 +46,5 @@ Route::prefix('customer')->name('customer.')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth:customer,agent,admin')->group(function () {
-    Route::get('/attachments/{attachment}', [\App\Http\Controllers\AttachmentController::class, 'download'])
-        ->name('attachments.download');
+    Route::get('/attachments/{attachment}', [AttachmentController::class, 'download'])->name('attachments.download');
 });
