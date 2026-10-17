@@ -23,9 +23,9 @@ class DashboardService
         $stats = Ticket::where('assigned_agent_id', $agent->id)
             ->selectRaw("
                 COUNT(*) as total,
-                COALESCE(SUM(CASE WHEN status IN ('open', 'in_progress') THEN 1 ELSE 0 END), 0) as active_count,
-                COALESCE(SUM(CASE WHEN sla_due_at <= ? AND status IN ('open', 'in_progress') THEN 1 ELSE 0 END), 0) as breached_count,
-                COALESCE(SUM(CASE WHEN sla_warning_at <= ? AND sla_due_at > ? AND status IN ('open', 'in_progress') THEN 1 ELSE 0 END), 0) as approaching_count,
+                COALESCE(SUM(CASE WHEN status IN ('open', 'in_progress', 'waiting_for_customer') THEN 1 ELSE 0 END), 0) as active_count,
+                COALESCE(SUM(CASE WHEN sla_due_at <= ? AND status IN ('open', 'in_progress', 'waiting_for_customer') THEN 1 ELSE 0 END), 0) as breached_count,
+                COALESCE(SUM(CASE WHEN sla_warning_at <= ? AND sla_due_at > ? AND status IN ('open', 'in_progress', 'waiting_for_customer') THEN 1 ELSE 0 END), 0) as approaching_count,
                 COALESCE(SUM(CASE WHEN status IN ('resolved', 'closed') THEN 1 ELSE 0 END), 0) as resolved_count
             ", [$now, $now, $now])->first() ?? (object) [
                 'total' => 0,
@@ -36,7 +36,7 @@ class DashboardService
             ];
 
         $unassignedCount = Ticket::whereNull('assigned_agent_id')
-            ->whereIn('status', ['open', 'in_progress'])
+            ->whereIn('status', ['open', 'in_progress', 'waiting_for_customer'])
             ->count();
 
         $myTickets = Ticket::where('assigned_agent_id', $agent->id)

@@ -27,5 +27,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/tickets/{ticket}/reply', [\App\Http\Controllers\Admin\TicketController::class, 'reply'])->name('tickets.reply');
         Route::post('/tickets/{ticket}/status', [\App\Http\Controllers\Admin\TicketController::class, 'changeStatus'])->name('tickets.status');
         Route::post('/tickets/{ticket}/priority', [\App\Http\Controllers\Admin\TicketController::class, 'changePriority'])->name('tickets.priority');
+
+        // CSV Ticket Batch Imports
+        Route::get('/imports', [\App\Http\Controllers\Admin\ImportController::class, 'index'])->name('imports.index');
+        Route::get('/imports/create', [\App\Http\Controllers\Admin\ImportController::class, 'create'])->name('imports.create');
+        Route::post('/imports', [\App\Http\Controllers\Admin\ImportController::class, 'store'])->name('imports.store');
+        Route::get('/imports/{import}', [\App\Http\Controllers\Admin\ImportController::class, 'show'])->name('imports.show');
+        Route::get('/imports/{import}/errors', [\App\Http\Controllers\Admin\ImportController::class, 'downloadErrors'])->name('imports.errors');
     });
 });

@@ -120,6 +120,72 @@ class TicketService
     }
 
     /**
+     * Create a ticket imported from a CSV record in silent mode.
+     *
+     * In silent mode:
+     * - Runs in its own transaction
+     * - Generates atomic sequential ticket number
+     * - Calculates SLA deadlines relative to the row's original created_at
+     * - Does NOT send customer/agent notifications
+     * - Does NOT trigger auto-assignment
+     * - Records an immutable activity log entry
+     *
+     * @param Customer $customer
+     * @param Category $category
+     * @param array<string, mixed> $data
+     * @param \Illuminate\Database\Eloquent\Model|null $actor
+     */
+    public function createFromImport(Customer $customer, Category $category, array $data, ?\Illuminate\Database\Eloquent\Model $actor = null): Ticket
+    {
+        return DB::transaction(function () use ($customer, $category, $data, $actor) {
+            $priority = $data['priority'] instanceof Priority
+                ? $data['priority']
+                : Priority::from($data['priority']);
+
+            $status = $data['status'] instanceof TicketStatus
+                ? $data['status']
+                : TicketStatus::from($data['status']);
+
+            $createdAt = $data['created_at'] instanceof \Carbon\CarbonInterface
+                ? $data['created_at']
+                : \Carbon\CarbonImmutable::parse($data['created_at']);
+
+            $deadlines = $this->slaService->deadlinesFor($priority, $createdAt);
+            $ticketNumber = $this->numberGenerator->next();
+
+            $ticket = Ticket::create([
+                'ticket_number' => $ticketNumber,
+                'external_id' => !empty($data['external_id']) ? trim($data['external_id']) : null,
+                'customer_id' => $customer->id,
+                'category_id' => $category->id,
+                'subject' => $data['subject'],
+                'description' => $data['description'],
+                'priority' => $priority,
+                'status' => $status,
+                'sla_due_at' => $deadlines['sla_due_at'],
+                'sla_warning_at' => $deadlines['sla_warning_at'],
+                'created_at' => $createdAt,
+                'updated_at' => $createdAt,
+            ]);
+
+            $this->activityLogger->log(
+                ticket: $ticket,
+                event: ActivityEvent::Created,
+                actor: $actor,
+                old: [],
+                new: [
+                    'status' => $status->value,
+                    'priority' => $priority->value,
+                    'external_id' => $ticket->external_id,
+                ],
+                description: 'Ticket imported from external CSV' . ($ticket->external_id ? " ({$ticket->external_id})" : '')
+            );
+
+            return $ticket;
+        });
+    }
+
+    /**
      * Get paginated tickets visible to the specified actor with multi-criteria filtering.
      *
      * @param array<string, mixed> $filters Validated query filters

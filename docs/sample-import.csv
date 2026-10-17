@@ -1,0 +1,6 @@
+external_id,customer_email,customer_name,subject,description,priority,category,status,created_at
+LEGACY-1001,alice.smith@example.com,Alice Smith,Payment gateway error,Unable to process credit card payment at checkout,critical,Billing,open,2026-03-01 09:30:00
+LEGACY-1002,bob.jones@example.com,Bob Jones,Password reset link not working,Password reset email link expires prematurely,high,Security,in_progress,2026-03-01 10:15:00
+LEGACY-1003,carol.white@example.com,Carol White,Feature request for dark mode,Requesting system-wide dark mode support,low,General,open,2026-03-01 11:00:00
+LEGACY-1004,david.green@example.com,David Green,API rate limit exceeded,Client hitting unexpected 429 errors on webhook endpoint,medium,Technical,open,2026-03-01 11:45:00
+LEGACY-1005,elena.rostova@example.com,Elena Rostova,Invoice billing discrepancy,Annual renewal charged twice on business account,high,Billing,resolved,2026-02-28 16:20:00

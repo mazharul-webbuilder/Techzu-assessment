@@ -41,5 +41,7 @@ class AppServiceProvider extends ServiceProvider
         Model::preventLazyLoading(! app()->isProduction());
 
         \Illuminate\Support\Facades\Gate::policy(\App\Models\Ticket::class, \App\Policies\TicketPolicy::class);
+        \Illuminate\Support\Facades\Gate::policy(\App\Models\Attachment::class, \App\Policies\AttachmentPolicy::class);
+        \Illuminate\Support\Facades\Gate::policy(\App\Models\Import::class, \App\Policies\ImportPolicy::class);
     }
 }

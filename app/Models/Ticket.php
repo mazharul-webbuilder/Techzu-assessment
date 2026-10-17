@@ -30,6 +30,8 @@ class Ticket extends Model
         'escalated_at',
         'resolved_at',
         'closed_at',
+        'created_at',
+        'updated_at',
     ];
 
     /**

@@ -414,6 +414,9 @@
                             <a class="app-nav-link {{ request()->routeIs('admin.tickets.*') ? 'active' : '' }}" href="{{ route('admin.tickets.index') }}">
                                 <i class="bi bi-ticket-perforated-fill"></i> All Tickets
                             </a>
+                            <a class="app-nav-link {{ request()->routeIs('admin.imports.*') ? 'active' : '' }}" href="{{ route('admin.imports.index') }}">
+                                <i class="bi bi-file-earmark-arrow-up-fill"></i> CSV Import
+                            </a>
                         </div>
                     @endif
                 </div>
