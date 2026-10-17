@@ -124,6 +124,38 @@ class BusinessHoursCalculator
     }
 
     /**
+     * Determine whether the given timestamp falls inside configured business working hours.
+     *
+     * @param CarbonInterface|null $timestamp Defaults to current time
+     */
+    public function isWithinBusinessHours(?CarbonInterface $timestamp = null): bool
+    {
+        $c = CarbonImmutable::instance($timestamp ?? CarbonImmutable::now())->setTimezone($this->tz);
+
+        if (!$this->isBusinessDay($c)) {
+            return false;
+        }
+
+        $open = $c->setTimeFromTimeString($this->start);
+        $close = $c->setTimeFromTimeString($this->end);
+
+        return $c->gte($open) && $c->lt($close);
+    }
+
+    /**
+     * Compute the next business opening time for an out-of-hours timestamp.
+     *
+     * @param CarbonInterface|null $from Defaults to current time
+     * @return CarbonImmutable Next opening timestamp in UTC
+     */
+    public function nextBusinessOpeningTime(?CarbonInterface $from = null): CarbonImmutable
+    {
+        $c = CarbonImmutable::instance($from ?? CarbonImmutable::now())->setTimezone($this->tz);
+
+        return $this->moveIntoBusinessTime($c)->utc();
+    }
+
+    /**
      * Get the configured business timezone.
      */
     public function getTimezone(): string

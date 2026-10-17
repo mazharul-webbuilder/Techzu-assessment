@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\HasBusinessTimezone;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Import extends Model
 {
+    use HasBusinessTimezone;
     /**
      * @var list<string>
      */

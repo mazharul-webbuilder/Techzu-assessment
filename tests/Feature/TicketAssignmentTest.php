@@ -385,4 +385,36 @@ class TicketAssignmentTest extends TestCase
         $allResponse->assertSee($myTicket->ticket_number);
         $allResponse->assertSee($unassignedTicket->ticket_number);
     }
+
+    public function test_ticket_created_outside_business_hours_is_not_assigned_until_next_working_hours(): void
+    {
+        // Friday at 11:00 PM (Friday is non-working day in Dhaka Sun-Thu workweek)
+        \Carbon\Carbon::setTestNow(\Carbon\Carbon::parse('2026-03-06 23:00:00', 'Asia/Dhaka'));
+
+        $service = app(TicketService::class);
+        $ticket = $service->create($this->customer, [
+            'subject' => 'Late Friday night ticket',
+            'description' => 'Created during weekend.',
+            'priority' => Priority::Medium,
+            'category_id' => $this->category->id,
+        ]);
+
+        // Job attempts to handle outside working hours
+        $job = new AutoAssignTicketJob($ticket);
+        app()->call([$job, 'handle']);
+
+        // Must remain unassigned outside business hours
+        $this->assertNull($ticket->fresh()->assigned_agent_id);
+
+        // Advance to Sunday at 09:30 AM (next working hours opening)
+        \Carbon\Carbon::setTestNow(\Carbon\Carbon::parse('2026-03-08 09:30:00', 'Asia/Dhaka'));
+
+        // Job runs inside working hours
+        app()->call([$job, 'handle']);
+
+        // Now ticket is assigned!
+        $this->assertNotNull($ticket->fresh()->assigned_agent_id);
+
+        \Carbon\Carbon::setTestNow(); // Reset test clock
+    }
 }

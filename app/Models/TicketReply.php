@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasBusinessTimezone;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class TicketReply extends Model
 {
+    use HasBusinessTimezone;
     /**
      * @var list<string>
      */

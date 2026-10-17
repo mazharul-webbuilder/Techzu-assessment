@@ -33,8 +33,17 @@ class AutoAssignTicketJob implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(TicketAssignmentService $assignmentService): void
+    public function handle(TicketAssignmentService $assignmentService, \App\Services\Common\BusinessHoursCalculator $calculator): void
     {
+        // If current time is outside business working hours, release job back to queue
+        // so ticket is not assigned to any agent until the next working window opens
+        if (!$calculator->isWithinBusinessHours()) {
+            $nextOpening = $calculator->nextBusinessOpeningTime();
+            $delaySeconds = max(1, $nextOpening->getTimestamp() - now()->getTimestamp());
+            $this->release($delaySeconds);
+            return;
+        }
+
         // Only run auto-assignment if the ticket is still unassigned
         if ($this->ticket->assigned_agent_id === null) {
             $assignmentService->autoAssign($this->ticket);

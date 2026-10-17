@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use App\Enums\ActivityEvent;
+use App\Traits\HasBusinessTimezone;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class TicketActivity extends Model
 {
+    use HasBusinessTimezone;
     /**
      * Disable updated_at since this is an append-only audit trail.
      */

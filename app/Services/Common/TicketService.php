@@ -113,7 +113,13 @@ class TicketService
 
         // 7. Trigger automatic workload-based assignment if enabled
         if (config('helpdesk.auto_assign_on_create', true)) {
-            \App\Jobs\AutoAssignTicketJob::dispatch($ticket);
+            $calculator = app(\App\Services\Common\BusinessHoursCalculator::class);
+            if (!$calculator->isWithinBusinessHours()) {
+                // Delay assignment until next business hours window opens
+                \App\Jobs\AutoAssignTicketJob::dispatch($ticket)->delay($calculator->nextBusinessOpeningTime());
+            } else {
+                \App\Jobs\AutoAssignTicketJob::dispatch($ticket);
+            }
         }
 
         return $ticket;
