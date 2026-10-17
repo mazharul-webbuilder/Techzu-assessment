@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
             AgentSeeder::class,
             CustomerSeeder::class,
+            CategorySeeder::class,
         ]);
     }
 }
