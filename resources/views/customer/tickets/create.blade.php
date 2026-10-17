@@ -27,7 +27,7 @@
 
         <!-- Clean Form Card -->
         <div class="modern-card p-4 p-md-5">
-            <form method="POST" action="{{ route('customer.tickets.store') }}">
+            <form method="POST" action="{{ route('customer.tickets.store') }}" enctype="multipart/form-data">
                 @csrf
 
                 <!-- Subject -->
@@ -104,6 +104,26 @@
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                     <div class="form-text small text-muted">Include any error messages or reproduction steps to help us assist you faster.</div>
+                </div>
+
+                <!-- Attachments (Clean & Optional) -->
+                <div class="mb-4">
+                    <label for="attachments" class="form-label fw-semibold small text-secondary">
+                        Attachments <span class="text-muted fw-normal">(Optional)</span>
+                    </label>
+                    <input type="file"
+                           name="attachments[]"
+                           id="attachments"
+                           class="form-control @error('attachments') is-invalid @enderror @error('attachments.*') is-invalid @enderror"
+                           multiple
+                           accept=".pdf,.png,.jpg,.jpeg,.txt,.docx">
+                    @error('attachments')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                    @error('attachments.*')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                    <div class="form-text small text-muted">Upload up to 5 files (Max 5MB each). Allowed formats: PDF, PNG, JPG, TXT, DOCX.</div>
                 </div>
 
                 <!-- Form Actions -->

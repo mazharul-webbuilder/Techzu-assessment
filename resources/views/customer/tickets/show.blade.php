@@ -98,6 +98,36 @@
             <div class="p-4">
                 <div class="text-secondary" style="white-space: pre-wrap; font-size: 0.95rem; line-height: 1.6;">{{ $ticket->description }}</div>
             </div>
+
+            @if($ticket->attachments->isNotEmpty())
+                <div class="p-3 px-4 border-top bg-light">
+                    <div class="small fw-bold text-dark mb-2 d-flex align-items-center gap-1">
+                        <i class="bi bi-paperclip text-primary"></i>
+                        <span>Attachments ({{ $ticket->attachments->count() }})</span>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach($ticket->attachments as $attachment)
+                            @php
+                                $ext = strtolower(pathinfo($attachment->original_name, PATHINFO_EXTENSION));
+                                $isImg = in_array($ext, ['png', 'jpg', 'jpeg']);
+                                $sizeKb = round($attachment->size_bytes / 1024, 0);
+                            @endphp
+                            <div class="p-2 px-3 rounded-3 border bg-white d-flex align-items-center gap-2">
+                                <i class="bi {{ $isImg ? 'bi-file-earmark-image' : 'bi-file-earmark-text' }} text-secondary fs-5"></i>
+                                <div>
+                                    <a href="{{ route('attachments.download', $attachment) }}" class="text-decoration-none text-dark fw-semibold small d-block">
+                                        {{ $attachment->original_name }}
+                                    </a>
+                                    <span class="text-muted" style="font-size: 0.72rem;">{{ $sizeKb }} KB</span>
+                                </div>
+                                <a href="{{ route('attachments.download', $attachment) }}" class="btn btn-sm btn-light border py-1 px-2 ms-2 text-secondary" title="Download">
+                                    <i class="bi bi-download"></i>
+                                </a>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
         </div>
 
         <!-- Activity & Event Audit Timeline -->

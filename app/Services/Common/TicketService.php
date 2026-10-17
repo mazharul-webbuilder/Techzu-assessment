@@ -73,6 +73,28 @@ class TicketService
                 description: "Ticket created by {$customer->name}"
             );
 
+            // 5. Store uploaded attachments if provided
+            if (!empty($data['attachments']) && is_array($data['attachments'])) {
+                $disk = config('helpdesk.attachments.disk', 'local');
+                foreach ($data['attachments'] as $file) {
+                    if ($file instanceof \Illuminate\Http\UploadedFile) {
+                        $extension = $file->getClientOriginalExtension() ?: $file->extension();
+                        $filename = \Illuminate\Support\Str::uuid()->toString() . '.' . $extension;
+                        $path = $file->storeAs("tickets/{$ticket->id}", $filename, $disk);
+
+                        $ticket->attachments()->create([
+                            'uploaded_by_type' => $customer->getMorphClass(),
+                            'uploaded_by_id' => $customer->getKey(),
+                            'disk' => $disk,
+                            'path' => $path,
+                            'original_name' => $file->getClientOriginalName(),
+                            'mime_type' => $file->getMimeType() ?: $file->getClientMimeType(),
+                            'size_bytes' => $file->getSize(),
+                        ]);
+                    }
+                }
+            }
+
             return $ticket;
         });
     }
@@ -101,13 +123,14 @@ class TicketService
     }
 
     /**
-     * Load ticket details and chronological activity history.
+     * Load ticket details, attachments, and chronological activity history.
      */
     public function getTicketDetails(Ticket $ticket): Ticket
     {
         return $ticket->load([
             'category:id,name',
             'assignedAgent:id,name',
+            'attachments',
             'activities' => fn ($q) => $q->latest('created_at'),
             'activities.actor',
         ]);

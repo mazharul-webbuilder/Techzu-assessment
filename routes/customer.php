@@ -35,3 +35,13 @@ Route::prefix('customer')->name('customer.')->group(function () {
         Route::get('/tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
     });
 });
+
+/*
+|--------------------------------------------------------------------------
+| Shared Authenticated Attachment Downloads
+|--------------------------------------------------------------------------
+*/
+Route::middleware('auth:customer,agent,admin')->group(function () {
+    Route::get('/attachments/{attachment}', [\App\Http\Controllers\AttachmentController::class, 'download'])
+        ->name('attachments.download');
+});

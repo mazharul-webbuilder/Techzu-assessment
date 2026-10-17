@@ -24,6 +24,10 @@ class StoreTicketRequest extends FormRequest
      */
     public function rules(): array
     {
+        $maxFiles = config('helpdesk.attachments.max_files', 5);
+        $maxKb = config('helpdesk.attachments.max_kb', 5120);
+        $mimes = implode(',', config('helpdesk.attachments.mimes', ['pdf', 'png', 'jpg', 'jpeg', 'txt', 'docx']));
+
         return [
             'subject' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
@@ -33,6 +37,8 @@ class StoreTicketRequest extends FormRequest
                 'integer',
                 Rule::exists('categories', 'id')->where('is_active', true),
             ],
+            'attachments' => ['nullable', 'array', "max:{$maxFiles}"],
+            'attachments.*' => ['file', "max:{$maxKb}", "mimes:{$mimes}"],
         ];
     }
 
@@ -43,9 +49,17 @@ class StoreTicketRequest extends FormRequest
      */
     public function messages(): array
     {
+        $maxFiles = config('helpdesk.attachments.max_files', 5);
+        $maxKb = config('helpdesk.attachments.max_kb', 5120);
+        $maxMb = round($maxKb / 1024, 1);
+        $mimes = implode(', ', config('helpdesk.attachments.mimes', ['pdf', 'png', 'jpg', 'jpeg', 'txt', 'docx']));
+
         return [
             'category_id.exists' => 'The selected category is invalid or currently inactive.',
             'priority.Illuminate\Validation\Rules\Enum' => 'Please select a valid ticket priority level.',
+            'attachments.max' => "You may not upload more than {$maxFiles} attachments.",
+            'attachments.*.max' => "Each attachment file size must not exceed {$maxMb}MB.",
+            'attachments.*.mimes' => "Allowed attachment file formats: {$mimes}.",
         ];
     }
 }

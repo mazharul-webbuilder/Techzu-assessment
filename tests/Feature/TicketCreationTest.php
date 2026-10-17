@@ -131,4 +131,78 @@ class TicketCreationTest extends TestCase
         $response->assertSessionHasErrors('category_id');
         $this->assertDatabaseCount('tickets', 0);
     }
+
+    /**
+     * Test a customer can create a ticket with valid attachments.
+     */
+    public function test_customer_can_create_ticket_with_attachments(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('local');
+
+        $file1 = \Illuminate\Http\UploadedFile::fake()->create('screenshot.png', 500, 'image/png');
+        $file2 = \Illuminate\Http\UploadedFile::fake()->create('error_log.txt', 200, 'text/plain');
+
+        $payload = [
+            'subject' => 'Issue with payment gateway',
+            'description' => 'Attached screenshots showing error 500 on checkout.',
+            'category_id' => $this->category->id,
+            'priority' => Priority::Medium->value,
+            'attachments' => [$file1, $file2],
+        ];
+
+        $response = $this->actingAs($this->customer, 'customer')
+            ->post(route('customer.tickets.store'), $payload);
+
+        $ticket = Ticket::first();
+        $this->assertNotNull($ticket);
+        $this->assertCount(2, $ticket->attachments);
+
+        $attachment1 = $ticket->attachments->firstWhere('original_name', 'screenshot.png');
+        $this->assertNotNull($attachment1);
+        $this->assertSame('local', $attachment1->disk);
+        \Illuminate\Support\Facades\Storage::disk('local')->assertExists($attachment1->path);
+
+        $response->assertRedirect(route('customer.tickets.show', $ticket));
+
+        // Test downloading the attachment
+        $downloadResponse = $this->actingAs($this->customer, 'customer')
+            ->get(route('attachments.download', $attachment1));
+        $downloadResponse->assertOk();
+
+        // Another customer should be forbidden (403) from downloading this attachment
+        $otherCustomer = Customer::create([
+            'name' => 'Other Customer',
+            'email' => 'other@example.com',
+            'password' => Hash::make('password'),
+        ]);
+
+        $this->actingAs($otherCustomer, 'customer')
+            ->get(route('attachments.download', $attachment1))
+            ->assertStatus(403);
+    }
+
+    /**
+     * Test attachment upload rejects disallowed file types.
+     */
+    public function test_attachment_upload_rejects_disallowed_file_types(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('local');
+
+        $disallowedFile = \Illuminate\Http\UploadedFile::fake()->create('malware.exe', 500);
+
+        $payload = [
+            'subject' => 'Malware test',
+            'description' => 'Should fail mime validation',
+            'category_id' => $this->category->id,
+            'priority' => Priority::Low->value,
+            'attachments' => [$disallowedFile],
+        ];
+
+        $response = $this->actingAs($this->customer, 'customer')
+            ->post(route('customer.tickets.store'), $payload);
+
+        $response->assertSessionHasErrors('attachments.0');
+        $this->assertDatabaseCount('tickets', 0);
+        $this->assertDatabaseCount('attachments', 0);
+    }
 }
