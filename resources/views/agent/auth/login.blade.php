@@ -46,13 +46,16 @@
             @enderror
         </div>
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex flex-column mb-4">
             <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
+                <input class="form-check-input" type="checkbox" name="remember" id="remember" value="1" {{ old('remember') ? 'checked' : '' }}>
                 <label class="form-check-label small text-muted" for="remember">
                     Remember me
                 </label>
             </div>
+            @error('remember')
+                <div class="text-danger small mt-1">{{ $message }}</div>
+            @enderror
         </div>
 
         <button type="submit" class="btn btn-portal-agent w-100 py-2 fw-semibold shadow-sm">

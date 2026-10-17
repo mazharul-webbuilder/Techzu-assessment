@@ -15,6 +15,21 @@ class LoginRequest extends FormRequest
     }
 
     /**
+     * Prepare the data for validation.
+     *
+     * HTML checkboxes send "on" when checked without an explicit value.
+     * Convert to a strict boolean before validation so the 'boolean' rule succeeds.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('remember')) {
+            $this->merge([
+                'remember' => $this->boolean('remember'),
+            ]);
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
