@@ -1,58 +1,301 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Support Ticket & SLA Management System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+[![Tests](https://img.shields.io/badge/tests-90%20passed%20%28418%20assertions%29-success?style=flat-square&logo=php)](https://github.com/mazharul-webbuilder/Techzu-assessment)
+[![Laravel](https://img.shields.io/badge/Laravel-11%20%7C%2013-FF2D20?style=flat-square&logo=laravel)](https://laravel.com)
+[![PHP](https://img.shields.io/badge/PHP-8.2%20%7C%208.3-777BB4?style=flat-square&logo=php)](https://www.php.net)
+[![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 
-## About Laravel
+An enterprise-grade, high-reliability Support Ticket and Service Level Agreement (SLA) Management System built with **Laravel 11/13**, featuring multi-guard authentication, precise business-hours SLA deadline calculation, automated agent workload distribution, concurrent sequence numbering, private attachment access control, and memory-flat CSV batch import.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Table of Contents
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+1. [System Overview](#system-overview)
+2. [Features Checklist](#features-checklist)
+3. [Technology Stack](#technology-stack)
+4. [System Requirements](#system-requirements)
+5. [Installation & Setup](#installation--setup)
+6. [Running the Application](#running-the-application)
+7. [Demo Accounts](#demo-accounts)
+8. [Automated Test Suite](#automated-test-suite)
+9. [Architecture Summary](#architecture-summary)
+10. [SLA & Business-Hours Engine](#sla--business-hours-engine)
+11. [Assignment Strategy](#assignment-strategy)
+12. [Concurrency & Sequence Control](#concurrency--sequence-control)
+13. [Architecture Assumptions](#architecture-assumptions)
+14. [Known Limitations & Roadmap](#known-limitations--roadmap)
+15. [License](#license)
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## System Overview
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+This application manages the end-to-end support ticket lifecycle while strictly enforcing contractual Service Level Agreements (SLAs). Unlike basic ticketing systems that rely on naive wall-clock timers, this system calculates SLA resolution deadlines and breach warnings exclusively within configurable **business operating hours** and workdays, excluding nights, weekends, and holidays.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+### Key Architectural Pillars
+- **Three Distinct User Roles & Guards**: Complete separation of concerns between `Customer`, `Agent`, and `Admin` using separate database tables, auth guards, policies, and route namespaces.
+- **Strict Data Isolation**: Customers can only view and interact with their own tickets. Support agents work from assigned and unassigned queues. Administrators have complete supervisory oversight.
+- **Private File Protection**: Attachments are stored on private non-public storage. Downloads are streamed through a policy-guarded controller that verifies ticket ownership and blocks customer access to internal note attachments.
+- **Zero-Gap Atomic Ticket IDs**: Human-readable sequential numbering (`TKT-YYYY-NNNNNN`) protected by pessimistic row-level database locks.
 
-## Agentic Development
+---
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Features Checklist
 
+- [x] **Multi-Guard Authentication**: Independent auth guards (`customer`, `agent`, `admin`) with distinct login screens and session management.
+- [x] **Atomic Sequential Ticket Numbering**: `TKT-YYYY-NNNNNN` formatted identifiers generated atomically via `ticket_sequences` with row locks.
+- [x] **Business-Hours SLA Engine**: Precision deadline computation adhering to working hours (default Sunday–Thursday 09:00–18:00 `Asia/Dhaka`), skipping non-working hours and designated holidays.
+- [x] **Proactive SLA Warning & Escalation**: Automatic warning trigger at 80% elapsed time and breach notification via background jobs and console scheduler.
+- [x] **Automated Agent Workload Assignment**: Newly created tickets automatically assigned to the available agent with the fewest active tickets; unassigned pool for manual claiming.
+- [x] **Ticket Conversations & Internal Notes**: Public customer-facing replies alongside confidential staff-only internal notes.
+- [x] **Strict Ticket Lifecycle State Machine**: Enforces valid status transitions (`open` $\rightarrow$ `in_progress` $\rightarrow$ `waiting_for_customer` $\rightarrow$ `resolved` $\rightarrow$ `closed`).
+- [x] **Multi-Criteria Search & Filtering**: Paginated filtering across keyword, ticket number prefix, status, priority, category, assigned agent, customer, and date ranges.
+- [x] **Optimized Management Dashboards**: Single-query conditional aggregation returning all primary KPI metrics in $\le 3$ database queries.
+- [x] **Secure Private Attachments**: Authenticated file streaming with strict policy checks (customer cannot access internal notes' attachments; max 5MB; MIME whitelisting).
+- [x] **Streaming CSV Batch Import**: Memory-flat ($O(1)$) streaming ingestion via `fopen`/`fgetcsv`, duplicate skipping by `external_id`, row validation, and downloadable error reports.
+- [x] **Audit Trail & Activity Logging**: Immutable activity log entries tracking status changes, priority recalculations, assignments, and conversation events.
+
+---
+
+## Technology Stack
+
+- **Backend Framework**: Laravel 11 / 13 (PHP 8.2+ / PHP 8.3)
+- **Database**: SQLite (local dev & testing) / MySQL 8.0+ (production ready)
+- **Frontend / UI**: Laravel Blade Templates, Bootstrap 5.3 (via CDN), Bootstrap Icons
+- **Job Queues**: Laravel Database Queue Worker (`queue:work`)
+- **Task Scheduler**: Laravel Console Scheduler (`schedule:work`)
+- **Testing**: PHPUnit with in-memory SQLite and mock storage
+
+---
+
+## System Requirements
+
+- **PHP**: `>= 8.2` (PHP 8.3 recommended)
+  - Required Extensions: `pdo_sqlite` (or `pdo_mysql`), `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `intl`, `bcmath`
+- **Composer**: `2.x`
+- **Web Server**: Apache / Nginx / Laravel built-in development server
+
+---
+
+## Installation & Setup
+
+Follow these steps to set up the application on your local machine:
+
+### 1. Clone the Repository
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone https://github.com/mazharul-webbuilder/Techzu-assessment.git support-ticket-sla-system
+cd support-ticket-sla-system
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### 2. Install Dependencies
+```bash
+composer install
+```
 
-## Contributing
+### 3. Configure Environment
+Copy the example environment file and generate a unique application key:
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Verify that your `.env` contains the default SQLite database configuration:
+```ini
+DB_CONNECTION=sqlite
+QUEUE_CONNECTION=database
+MAIL_MAILER=log
+FILESYSTEM_DISK=local
+```
 
-## Code of Conduct
+### 4. Create Database & Run Migrations with Seeders
+Initialize the SQLite database file (if not already present), run all migrations, and seed demo records:
+```bash
+# On Linux/macOS:
+touch database/database.sqlite
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# On Windows (PowerShell):
+if (!(Test-Path database/database.sqlite)) { New-Item database/database.sqlite -ItemType File }
 
-## Security Vulnerabilities
+# Run migrations and seed test data:
+php artisan migrate --seed
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+---
+
+## Running the Application
+
+To experience all features (including background SLA escalation, notifications, and CSV processing), run the following three processes:
+
+### 1. Web Application Server
+```bash
+php artisan serve
+```
+The application will be accessible at: `http://127.0.0.1:8000`
+
+### 2. Background Queue Worker
+Processes email notifications, auto-assignments, and batch CSV imports:
+```bash
+php artisan queue:work
+```
+
+### 3. Task Scheduler (SLA Escalations)
+Scans for approaching warnings and breached tickets every minute:
+```bash
+php artisan schedule:work
+```
+
+> **Note on Email Notifications**: By default, `MAIL_MAILER=log`. All dispatched emails are written to `storage/logs/laravel.log`. To inspect notification payloads, open the log file or configure SMTP credentials in `.env`.
+
+---
+
+## Demo Accounts
+
+The database seeder pre-configures test accounts for all roles. All demo accounts use the password: **`password`**
+
+| Portal | Login URL | Email Address | Password | Role Description |
+| :--- | :--- | :--- | :--- | :--- |
+| **System Admin** | `/admin/login` | `admin@example.com` | `password` | Superuser: System dashboard, global assignment, CSV import |
+| **Support Agent** | `/agent/login` | `agent1@example.com` | `password` | Agent queue, ticket claiming, resolution, internal notes |
+| **Support Agent** | `/agent/login` | `agent2@example.com` | `password` | Secondary support agent for workload balancing |
+| **Customer** | `/customer/login` | `customer1@example.com` | `password` | Submits tickets, tracks personal issues, replies |
+| **Customer** | `/customer/login` | `customer2@example.com` | `password` | Secondary customer for access boundary testing |
+
+---
+
+## Automated Test Suite
+
+The test suite contains **90 automated tests with 418 assertions**, covering unit logic, feature workflows, concurrency safety, and security policies.
+
+### Run All Tests
+```bash
+php artisan test
+```
+
+### Test Suite Structure
+| Test Class | Focus Area |
+| :--- | :--- |
+| `SlaServiceTest` | Business hours calculator, weekend/holiday skipping, warning threshold |
+| `SlaEscalationTest` | Scheduled command, warning notifications, manager escalation flag |
+| `TicketNumberGeneratorTest` | Atomic sequence numbering and database row lock protection |
+| `TicketAssignmentTest` | Least-loaded auto-assignment, manual claiming, admin reassignment |
+| `TicketConversationTest` | Public customer replies, staff internal notes, status transitions |
+| `TicketAuthorizationTest` | Multi-guard access barriers and cross-customer isolation |
+| `AttachmentTest` | Private disk storage, size/MIME validation, internal note protection |
+| `TicketFilterTest` | Multi-criteria filtering, keyword searches, pagination preservation |
+| `DashboardTest` | Single conditional aggregation KPIs, query bounds ($\le 3$), workload stats |
+| `TicketImportTest` | Memory-flat CSV streaming, duplicate skipping, error report CSV |
+| `TicketNotificationTest` | Asynchronous email dispatch for ticket creation, replies, and status |
+
+---
+
+## Architecture Summary
+
+For in-depth diagrams, database schema listings, and detailed design rationale, refer to:
+👉 **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**
+
+```
+                           +------------------------------------+
+                           |        Global Router & Auth        |
+                           +------------------------------------+
+                                 |            |            |
+                 +---------------+            |            +---------------+
+                 |                            |                            |
+       [Guard: customer]              [Guard: agent]               [Guard: admin]
+      Customer Portal (/customer)    Agent Queue (/agent)       Admin Console (/admin)
+                 |                            |                            |
+                 +--------------------+-------+----------------------------+
+                                      |
+                      +-------------------------------+
+                      |      Core Domain Services     |
+                      | - TicketService               |
+                      | - SlaService                  |
+                      | - BusinessHoursCalculator     |
+                      | - TicketNumberGenerator       |
+                      | - ActivityLogger              |
+                      +-------------------------------+
+                                      |
+                      +-------------------------------+
+                      |   Database & Sequence Lock    |
+                      | - tickets (indexed)           |
+                      | - ticket_sequences (FOR UPDATE|
+                      | - ticket_activities (audit)   |
+                      +-------------------------------+
+```
+
+---
+
+## SLA & Business-Hours Engine
+
+The SLA subsystem ([SlaService.php](app/Services/Common/SlaService.php) & [BusinessHoursCalculator.php](app/Services/Common/BusinessHoursCalculator.php)) calculates resolution deadlines exclusively within operating working hours:
+
+- **Timezone**: Evaluated in `Asia/Dhaka` (UTC+6) while database timestamps remain normalized in UTC.
+- **Working Schedule**: Sunday through Thursday, 09:00 to 18:00 (9 working hours per day).
+- **Holidays**: Configurable array of excluded calendar dates.
+- **Priority SLA Durations**:
+  - `Critical`: **2 business hours** (120 minutes)
+  - `High`: **8 business hours** (480 minutes)
+  - `Medium`: **24 business hours** (1,440 minutes / ~2.6 working days)
+  - `Low`: **48 business hours** (2,880 minutes / ~5.3 working days)
+- **Early Warning Threshold**: Triggered at **80%** of elapsed SLA time.
+- **Priority Changes**: Recalculates both warning and due deadlines from the ticket's original `created_at` timestamp.
+
+---
+
+## Assignment Strategy
+
+Ticket assignment is handled via [TicketAssignmentService.php](app/Services/Common/TicketAssignmentService.php):
+
+1. **Auto-Assignment on Creation**:
+   - Queries available agents (`is_available = true`).
+   - Counts active tickets per agent (`open`, `in_progress`, `waiting_for_customer`).
+   - Assigns the new ticket to the agent with the **lowest active workload**.
+   - If no agents are available or all have equal load, tie-breaking selects the agent who least recently received a ticket.
+2. **Claim Pool**:
+   - If auto-assignment is disabled or no agents are available, tickets remain in the unassigned pool.
+   - Any active support agent can claim an unassigned ticket.
+3. **Administrative Override**:
+   - System administrators can manually assign or reassign any ticket to any agent at any point in the lifecycle.
+
+---
+
+## Concurrency & Sequence Control
+
+To prevent duplicate ticket numbers or gaps under concurrent traffic, ticket number generation is decoupled from primary keys:
+
+- Format: `TKT-YYYY-NNNNNN` (e.g., `TKT-2026-000001`).
+- Implemented in [TicketNumberGenerator.php](app/Services/Common/TicketNumberGenerator.php) using a dedicated table: `ticket_sequences`.
+- Uses a pessimistic row-level lock:
+  ```sql
+  SELECT current_value FROM ticket_sequences WHERE year = :year FOR UPDATE;
+  ```
+- Increments and commits atomically inside the ticket creation database transaction.
+
+---
+
+## Architecture Assumptions
+
+The following assumptions (documented in Section 17 of `docs/ARCHITECTURE.md`) govern the system design:
+
+1. **Three user tables, three guards, three login portals**: Customers, agents, and administrators have completely separate database tables and authentication sessions.
+2. **Normalized UTC Timestamps**: All database timestamps are stored in UTC; business hours are projected in `Asia/Dhaka`.
+3. **SLA Clock Continuity**: The SLA timer continues running during `waiting_for_customer`, stops upon transitioning to `resolved`, and is not extended if a ticket is reopened.
+4. **Retroactive Priority SLA**: Changing a ticket's priority recalculates deadlines relative to its original creation time.
+5. **Least-Loaded Workload Model**: Automatic assignment routes to available agents with the fewest active tickets; unassigned tickets remain in the claim pool.
+6. **Actor Boundaries**: Customers cannot create tickets on behalf of other customers; administrators supervise and reassign but do not author initial tickets.
+7. **Silent CSV Import**: Bulk imported tickets do not trigger outgoing emails and deduplicate against existing rows using `external_id`.
+8. **Asynchronous Defaults**: Emails use the `log` mailer locally; `php artisan queue:work` and `php artisan schedule:work` are required for full automated behavior.
+
+---
+
+## Known Limitations & Roadmap
+
+- **Sequence Lock Throughput**: The `SELECT ... FOR UPDATE` lock on `ticket_sequences` is atomic and robust up to moderate high concurrency. At hyper-scale ($>100,000$ tickets/minute), pre-allocating sequence blocks (e.g., reserving batches of 100 IDs in Redis) is recommended.
+- **Full-Text Search Engine**: Keyword searching currently uses optimized SQL `LIKE` queries with compound indexes. For multi-million ticket archives, integrate MySQL `FULLTEXT` or Meilisearch/Elasticsearch.
+- **Real-Time Client Updates**: Currently, dashboard and queue statistics refresh on page reload or poll intervals. Future releases can incorporate Laravel Reverb or Pusher WebSockets for instant push events.
+
+---
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is open-source software licensed under the [MIT License](LICENSE).
