@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5" />
+      <stop offset="100%" stop-color="#7c3aed" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="1" stdDeviation="0.8" flood-color="#1e1b4b" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <!-- Background with rounded corners -->
+  <rect width="32" height="32" rx="7" fill="url(#shieldGrad)" />
+  
+  <!-- Outer shield translucent glow -->
+  <path d="M16 4.8L6.8 8.4V15.4C6.8 21.2 10.7 26.5 16 27.9C21.3 26.5 25.2 21.2 25.2 15.4V8.4L16 4.8Z" fill="#ffffff" fill-opacity="0.22" />
+  
+  <!-- Main white shield -->
+  <path d="M16 6.5L8.5 9.5V15.2C8.5 20.0 11.7 24.3 16 25.6C20.3 24.3 23.5 20.0 23.5 15.2V9.5L16 6.5Z" fill="#ffffff" filter="url(#shadow)" />
+  
+  <!-- Centered checkmark in brand indigo -->
+  <path d="M14.5 18.2L11.4 15.1L10.0 16.5L14.5 21.0L22.0 13.5L20.6 12.1L14.5 18.2Z" fill="#4f46e5" />
+</svg>
