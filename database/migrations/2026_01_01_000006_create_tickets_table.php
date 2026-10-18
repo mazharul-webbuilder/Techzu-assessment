@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('tickets', function (Blueprint $table) {
             $table->id();
-            // Predefined format TKT-YYYY-NNNNNN (e.g., TKT-2026-000001)
+            // Predefined format TKT-YYYY-NNNNNN example ticket =  TKT-2026-000001)
             $table->string('ticket_number', 20)->unique();
             // Optional external identifier used during CSV import for deduplication
             $table->string('external_id', 100)->nullable()->unique();

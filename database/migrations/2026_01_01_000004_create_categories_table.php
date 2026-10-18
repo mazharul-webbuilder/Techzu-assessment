@@ -14,8 +14,6 @@ return new class extends Migration
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
             $table->string('name', 100)->unique();
-            // is_active allows deactivating categories rather than hard deleting,
-            // preserving relational integrity for historical tickets.
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
