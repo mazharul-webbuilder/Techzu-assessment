@@ -7,6 +7,12 @@
 
 An enterprise-grade, high-reliability Support Ticket and Service Level Agreement (SLA) Management System built with **Laravel 13**, featuring multi-guard authentication, precise business-hours SLA deadline calculation, automated agent workload distribution, concurrent sequence numbering, private attachment access control, and memory-flat CSV batch import.
 
+> 🌐 **Live Production Demo**: **[https://techzu-assessment.telerpbd.com](https://techzu-assessment.telerpbd.com)**  
+> *(Password for all demo accounts: **`password`**)*
+> - 🛡️ **[Super Admin Portal](https://techzu-assessment.telerpbd.com/admin/login)**: `admin@example.com`
+> - 🎧 **[Support Agent Portal](https://techzu-assessment.telerpbd.com/agent/login)**: `agent1@example.com`
+> - 👤 **[Customer Support Portal](https://techzu-assessment.telerpbd.com/customer/login)**: `customer1@example.com`
+
 ---
 
 ## Table of Contents
@@ -160,6 +166,12 @@ Then run all migrations and seed demo records:
 php artisan migrate --seed
 ```
 
+### 5. Create Storage Symlink
+Link the storage directory to ensure any public assets or storage references are accessible:
+```bash
+php artisan storage:link
+```
+
 ---
 
 ## Running the Application
@@ -192,13 +204,15 @@ php artisan schedule:work
 
 The database seeder pre-configures test accounts for all roles. All demo accounts use the password: **`password`**
 
-| Portal | Login URL | Email Address | Password | Role Description |
-| :--- | :--- | :--- | :--- | :--- |
-| **System Admin** | `/admin/login` | `admin@example.com` | `password` | Superuser: System dashboard, global assignment, CSV import |
-| **Support Agent** | `/agent/login` | `agent1@example.com` | `password` | Agent queue, ticket claiming, resolution, internal notes |
-| **Support Agent** | `/agent/login` | `agent2@example.com` | `password` | Secondary support agent for workload balancing |
-| **Customer** | `/customer/login` | `customer1@example.com` | `password` | Submits tickets, tracks personal issues, replies |
-| **Customer** | `/customer/login` | `customer2@example.com` | `password` | Secondary customer for access boundary testing |
+* **Live Base URL**: [https://techzu-assessment.telerpbd.com](https://techzu-assessment.telerpbd.com)
+
+| Portal | Local URL | Live Production URL | Email Address | Password | Role Description |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **System Admin** | `/admin/login` | [`/admin/login`](https://techzu-assessment.telerpbd.com/admin/login) | `admin@example.com` | `password` | Superuser: System dashboard, global assignment, CSV import |
+| **Support Agent** | `/agent/login` | [`/agent/login`](https://techzu-assessment.telerpbd.com/agent/login) | `agent1@example.com` | `password` | Agent queue, ticket claiming, resolution, internal notes |
+| **Support Agent** | `/agent/login` | [`/agent/login`](https://techzu-assessment.telerpbd.com/agent/login) | `agent2@example.com` | `password` | Secondary support agent for workload balancing |
+| **Customer** | `/customer/login` | [`/customer/login`](https://techzu-assessment.telerpbd.com/customer/login) | `customer1@example.com` | `password` | Submits tickets, tracks personal issues, replies |
+| **Customer** | `/customer/login` | [`/customer/login`](https://techzu-assessment.telerpbd.com/customer/login) | `customer2@example.com` | `password` | Secondary customer for access boundary testing |
 
 ---
 
