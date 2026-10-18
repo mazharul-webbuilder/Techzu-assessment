@@ -12,20 +12,21 @@ An enterprise-grade, high-reliability Support Ticket and Service Level Agreement
 ## Table of Contents
 
 1. [System Overview](#system-overview)
-2. [Features Checklist](#features-checklist)
-3. [Technology Stack](#technology-stack)
-4. [System Requirements](#system-requirements)
-5. [Installation & Setup](#installation--setup)
-6. [Running the Application](#running-the-application)
-7. [Demo Accounts](#demo-accounts)
-8. [Automated Test Suite](#automated-test-suite)
-9. [Architecture Summary](#architecture-summary)
-10. [SLA & Business-Hours Engine](#sla--business-hours-engine)
-11. [Assignment Strategy](#assignment-strategy)
-12. [Concurrency & Sequence Control](#concurrency--sequence-control)
-13. [Architecture Assumptions](#architecture-assumptions)
-14. [Known Limitations & Roadmap](#known-limitations--roadmap)
-15. [Author & Assessment Information](#author--assessment-information)
+2. [Visual Tour & Application Portals](#visual-tour--application-portals)
+3. [Features Checklist](#features-checklist)
+4. [Technology Stack](#technology-stack)
+5. [System Requirements](#system-requirements)
+6. [Installation & Setup](#installation--setup)
+7. [Running the Application](#running-the-application)
+8. [Demo Accounts](#demo-accounts)
+9. [Automated Test Suite](#automated-test-suite)
+10. [Architecture Summary](#architecture-summary)
+11. [SLA & Business-Hours Engine](#sla--business-hours-engine)
+12. [Assignment Strategy](#assignment-strategy)
+13. [Concurrency & Sequence Control](#concurrency--sequence-control)
+14. [Architecture Assumptions](#architecture-assumptions)
+15. [Known Limitations & Roadmap](#known-limitations--roadmap)
+16. [Author & Assessment Information](#author--assessment-information)
 
 ---
 
@@ -38,6 +39,36 @@ This application manages the end-to-end support ticket lifecycle while strictly 
 - **Strict Data Isolation**: Customers can only view and interact with their own tickets. Support agents work from assigned and unassigned queues. Administrators have complete supervisory oversight.
 - **Private File Protection**: Attachments are stored on private non-public storage. Downloads are streamed through a policy-guarded controller that verifies ticket ownership and blocks customer access to internal note attachments.
 - **Zero-Gap Atomic Ticket IDs**: Human-readable sequential numbering (`TKT-YYYY-NNNNNN`) protected by pessimistic row-level database locks.
+
+---
+
+## Visual Tour & Application Portals
+
+### 1. System Command Center (Admin Console)
+Centralized supervisory dashboard tracking active ticket queues, unassigned triage pools, SLA breach status, active support agents, and system health in real-time.
+
+![Admin Command Center](docs/screenshots/admin-dashboard.jpeg)
+
+---
+
+### 2. Support Agent Workstation & Queue
+Specialized workspace displaying assigned workload, unassigned ticket pool ready for claiming, live resolution targets, and quick navigation.
+
+![Agent Workstation](docs/screenshots/agent-dashboard.jpeg)
+
+---
+
+### 3. Ticket Resolution, SLA Countdown & Internal Staff Notes
+Comprehensive ticket interaction interface showing precision business-hours SLA countdown timer, active lifecycle transition state-machine, and confidential staff-only **Internal Notes** (highlighted in yellow with lock indicator) strictly isolated from customers.
+
+![Agent Ticket Details & Internal Notes](docs/screenshots/agent-ticket-details.jpeg)
+
+---
+
+### 4. Customer Self-Service Portal
+Clean and intuitive customer dashboard showing complete ticket history, status progress badges, and real-time SLA due targets with strict customer data isolation.
+
+![Customer Support Portal](docs/screenshots/customer-dashboard.jpeg)
 
 ---
 
