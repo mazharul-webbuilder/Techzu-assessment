@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Notification;
 /**
  * Service executing scheduled scans for SLA breach escalation and warning threshold alerts.
  *
- * Concurrency & Idempotency Design (Section 8.5):
+ * Concurrency & Idempotency Design:
  * - Evaluates only ACTIVE tickets (status in [open, in_progress, waiting_for_customer]).
  * - Uses atomic conditional updates (e.g. WHERE key = ? AND sla_breach_notified_at IS NULL).
  * - Only the process that affects exactly 1 row wins the right to record audit log and send notifications.
@@ -37,7 +37,7 @@ class SlaEscalationService
         $breachCount = 0;
         $warningCount = 0;
 
-        // 1. Breach Scan: Tickets past resolution deadline with no breach notification sent yet
+        // Breach Scan: Tickets past resolution deadline with no breach notification sent yet
         Ticket::query()
             ->active()
             ->whereNotNull('sla_due_at')
@@ -74,7 +74,7 @@ class SlaEscalationService
                 }
             });
 
-        // 2. Warning Scan: Tickets past warning threshold, before due date, with no warning sent yet
+        // Warning Scan: Tickets past warning threshold, before due date, with no warning sent yet
         Ticket::query()
             ->active()
             ->whereNotNull('sla_warning_at')
