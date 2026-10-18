@@ -39,12 +39,3 @@ Route::prefix('customer')->name('customer.')->group(function () {
         Route::post('/tickets/{ticket}/close', [TicketController::class, 'close'])->name('tickets.close');
     });
 });
-
-/*
-|--------------------------------------------------------------------------
-| Shared Authenticated Attachment Downloads
-|--------------------------------------------------------------------------
-*/
-Route::middleware('auth:customer,agent,admin')->group(function () {
-    Route::get('/attachments/{attachment}', [AttachmentController::class, 'download'])->name('attachments.download');
-});

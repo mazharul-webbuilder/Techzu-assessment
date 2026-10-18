@@ -35,10 +35,11 @@ An enterprise-grade, high-reliability Support Ticket and Service Level Agreement
 This application manages the end-to-end support ticket lifecycle while strictly enforcing contractual Service Level Agreements (SLAs). Unlike basic ticketing systems that rely on naive wall-clock timers, this system calculates SLA resolution deadlines and breach warnings exclusively within configurable **business operating hours** and workdays, excluding nights, weekends, and holidays.
 
 ### Key Architectural Pillars
-- **Three Distinct User Roles & Guards**: Complete separation of concerns between `Customer`, `Agent`, and `Admin` using separate database tables, auth guards, policies, and route namespaces for scalability and security as system grows.
+- **Three Distinct User Roles & Guards**: Complete separation of concerns between `Customer`, `Agent`, and `Admin` using separate database tables, auth guards, policies, and dedicated route namespaces (`routes/customer.php`, `routes/agent.php`, `routes/admin.php`, and `routes/common.php`) for scalability and security as system grows.
 - **Strict Data Isolation**: Customers can only view and interact with their own tickets. Support agents work from assigned and unassigned queues. Administrators have complete supervisory oversight.
 - **Private File Protection**: Attachments are stored on private non-public storage. Downloads are streamed through a policy-guarded controller that verifies ticket ownership and blocks customer access to internal note attachments.
 - **Zero-Gap Atomic Ticket IDs**: Human-readable sequential numbering (`TKT-YYYY-NNNNNN`) protected by pessimistic row-level database locks.
+- **Dedicated Common Service Layer**: Cross-portal endpoints (such as streaming private attachments and the In-App Notification Center) reside in a dedicated `routes/common.php` guarded by multi-guard authentication (`auth:customer,agent,admin`).
 
 ---
 
@@ -85,6 +86,7 @@ Clean and intuitive customer dashboard showing complete ticket history, status p
 - [x] **Optimized Management Dashboards**: Single-query conditional aggregation returning all primary KPI metrics in $\le 3$ database queries.
 - [x] **Secure Private Attachments**: Authenticated file streaming with strict policy checks (customer cannot access internal notes' attachments; max 5MB; MIME whitelisting).
 - [x] **Streaming CSV Batch Import**: Memory-flat ($O(1)$) streaming ingestion via `fopen`/`fgetcsv`, duplicate skipping by `external_id`, row validation, and downloadable error reports.
+- [x] **In-App Notification Center & Live Screen Alerts**: Interactive notification bell in the top navbar with unread counters, mark-as-read controls, dropdown history, and floating toast pop-up alerts appearing in real-time when new replies or SLA escalations arrive for active users.
 - [x] **Audit Trail & Activity Logging**: Immutable activity log entries tracking status changes, priority recalculations, assignments, and conversation events.
 
 ---
