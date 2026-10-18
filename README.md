@@ -1,11 +1,11 @@
 # Support Ticket & SLA Management System
 
-[![Tests](https://img.shields.io/badge/tests-90%20passed%20%28418%20assertions%29-success?style=flat-square&logo=php)](https://github.com/mazharul-webbuilder/Techzu-assessment)
-[![Laravel](https://img.shields.io/badge/Laravel-11%20%7C%2013-FF2D20?style=flat-square&logo=laravel)](https://laravel.com)
-[![PHP](https://img.shields.io/badge/PHP-8.2%20%7C%208.3-777BB4?style=flat-square&logo=php)](https://www.php.net)
-[![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+[![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20?style=flat-square&logo=laravel)](https://laravel.com)
+[![PHP](https://img.shields.io/badge/PHP-8.3-777BB4?style=flat-square&logo=php)](https://www.php.net)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0+-4479A1?style=flat-square&logo=mysql&logoColor=white)](https://www.mysql.com)
 
-An enterprise-grade, high-reliability Support Ticket and Service Level Agreement (SLA) Management System built with **Laravel 11/13**, featuring multi-guard authentication, precise business-hours SLA deadline calculation, automated agent workload distribution, concurrent sequence numbering, private attachment access control, and memory-flat CSV batch import.
+
+An enterprise-grade, high-reliability Support Ticket and Service Level Agreement (SLA) Management System built with **Laravel 13**, featuring multi-guard authentication, precise business-hours SLA deadline calculation, automated agent workload distribution, concurrent sequence numbering, private attachment access control, and memory-flat CSV batch import.
 
 ---
 
@@ -25,7 +25,7 @@ An enterprise-grade, high-reliability Support Ticket and Service Level Agreement
 12. [Concurrency & Sequence Control](#concurrency--sequence-control)
 13. [Architecture Assumptions](#architecture-assumptions)
 14. [Known Limitations & Roadmap](#known-limitations--roadmap)
-15. [License](#license)
+15. [Author & Assessment Information](#author--assessment-information)
 
 ---
 
@@ -34,7 +34,7 @@ An enterprise-grade, high-reliability Support Ticket and Service Level Agreement
 This application manages the end-to-end support ticket lifecycle while strictly enforcing contractual Service Level Agreements (SLAs). Unlike basic ticketing systems that rely on naive wall-clock timers, this system calculates SLA resolution deadlines and breach warnings exclusively within configurable **business operating hours** and workdays, excluding nights, weekends, and holidays.
 
 ### Key Architectural Pillars
-- **Three Distinct User Roles & Guards**: Complete separation of concerns between `Customer`, `Agent`, and `Admin` using separate database tables, auth guards, policies, and route namespaces.
+- **Three Distinct User Roles & Guards**: Complete separation of concerns between `Customer`, `Agent`, and `Admin` using separate database tables, auth guards, policies, and route namespaces for scalability and security as system grows.
 - **Strict Data Isolation**: Customers can only view and interact with their own tickets. Support agents work from assigned and unassigned queues. Administrators have complete supervisory oversight.
 - **Private File Protection**: Attachments are stored on private non-public storage. Downloads are streamed through a policy-guarded controller that verifies ticket ownership and blocks customer access to internal note attachments.
 - **Zero-Gap Atomic Ticket IDs**: Human-readable sequential numbering (`TKT-YYYY-NNNNNN`) protected by pessimistic row-level database locks.
@@ -60,8 +60,8 @@ This application manages the end-to-end support ticket lifecycle while strictly 
 
 ## Technology Stack
 
-- **Backend Framework**: Laravel 11 / 13 (PHP 8.2+ / PHP 8.3)
-- **Database**: SQLite (local dev & testing) / MySQL 8.0+ (production ready)
+- **Backend Framework**: Laravel 13 (PHP 8.3)
+- **Database**: MySQL 8.0+
 - **Frontend / UI**: Laravel Blade Templates, Bootstrap 5.3 (via CDN), Bootstrap Icons
 - **Job Queues**: Laravel Database Queue Worker (`queue:work`)
 - **Task Scheduler**: Laravel Console Scheduler (`schedule:work`)
@@ -71,7 +71,7 @@ This application manages the end-to-end support ticket lifecycle while strictly 
 
 ## System Requirements
 
-- **PHP**: `>= 8.2` (PHP 8.3 recommended)
+- **PHP**: `>= 8.3`
   - Required Extensions: `pdo_sqlite` (or `pdo_mysql`), `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `intl`, `bcmath`
 - **Composer**: `2.x`
 - **Web Server**: Apache / Nginx / Laravel built-in development server
@@ -100,24 +100,30 @@ cp .env.example .env
 php artisan key:generate
 ```
 
-Verify that your `.env` contains the default SQLite database configuration:
+Configure your MySQL database connection in `.env`:
 ```ini
-DB_CONNECTION=sqlite
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=support_ticket_sla
+DB_USERNAME=root
+DB_PASSWORD=
+
 QUEUE_CONNECTION=database
 MAIL_MAILER=log
 FILESYSTEM_DISK=local
 ```
 
 ### 4. Create Database & Run Migrations with Seeders
-Initialize the SQLite database file (if not already present), run all migrations, and seed demo records:
+Create a new database in MySQL (matching your `DB_DATABASE` in `.env`) using your preferred client (Laragon, phpMyAdmin, HeidiSQL, MySQL Workbench) or terminal:
+
 ```bash
-# On Linux/macOS:
-touch database/database.sqlite
+# Via MySQL CLI:
+mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS support_ticket_sla CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+```
 
-# On Windows (PowerShell):
-if (!(Test-Path database/database.sqlite)) { New-Item database/database.sqlite -ItemType File }
-
-# Run migrations and seed test data:
+Then run all migrations and seed demo records:
+```bash
 php artisan migrate --seed
 ```
 
@@ -190,9 +196,6 @@ php artisan test
 ---
 
 ## Architecture Summary
-
-For in-depth diagrams, database schema listings, and detailed design rationale, refer to:
-👉 **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**
 
 ```
                            +------------------------------------+
@@ -275,7 +278,7 @@ To prevent duplicate ticket numbers or gaps under concurrent traffic, ticket num
 
 ## Architecture Assumptions
 
-The following assumptions (documented in Section 17 of `docs/ARCHITECTURE.md`) govern the system design:
+The following assumptions govern the system design:
 
 1. **Three user tables, three guards, three login portals**: Customers, agents, and administrators have completely separate database tables and authentication sessions.
 2. **Normalized UTC Timestamps**: All database timestamps are stored in UTC; business hours are projected in `Asia/Dhaka`.
@@ -296,6 +299,10 @@ The following assumptions (documented in Section 17 of `docs/ARCHITECTURE.md`) g
 
 ---
 
-## License
+## Author & Assessment Information
 
-This project is open-source software licensed under the [MIT License](LICENSE).
+This project is develop by **Mazharul Islam** as my technical assessment submission for **Techzu Ichicode Pte Ltd**.
+
+- **Author**: Mazharul Islam
+- **Email**: [mazharulislam1998r@gmail.com](mailto:mazharulislam1998r@gmail.com)
+- **Submission For**: Techzu Ichicode Pte Ltd (Technical Assessment)
