@@ -10,6 +10,8 @@ use App\Services\Customer\DashboardService;
 use App\Services\Customer\TicketService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use App\Http\Requests\TicketIndexRequest;
+use App\Http\Requests\StoreReplyRequest;
 
 class TicketController extends Controller
 {
@@ -21,7 +23,7 @@ class TicketController extends Controller
     /**
      * Display a listing of tickets created by the authenticated customer.
      */
-    public function index(\App\Http\Requests\TicketIndexRequest $request): View
+    public function index(TicketIndexRequest $request): View
     {
         $customer = auth('customer')->user();
 
@@ -72,7 +74,7 @@ class TicketController extends Controller
     /**
      * Post a public reply to the ticket discussion.
      */
-    public function reply(\App\Http\Requests\StoreReplyRequest $request, Ticket $ticket): RedirectResponse
+    public function reply(StoreReplyRequest $request, Ticket $ticket): RedirectResponse
     {
         $this->authorize('reply', $ticket);
 

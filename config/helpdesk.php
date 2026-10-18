@@ -45,7 +45,7 @@ return [
     | - Days: 0 (Sunday) through 4 (Thursday) matching standard BD workdays.
     |   (0 = Sunday, 1 = Monday, 2 = Tuesday, 3 = Wednesday, 4 = Thursday)
     | - Start & End: Working hours from 09:00 to 18:00 (9 hours/day).
-    | - Holidays: List of specific 'Y-m-d' date strings excluded from business hours.
+    | - Holidays: List of specific 'Y-m-d' date strings excluded from business hours. e.g. ["2026-01-01", "2026-12-25"]
     |
     */
     'business_hours' => [

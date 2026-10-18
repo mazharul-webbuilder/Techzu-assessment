@@ -51,13 +51,13 @@ class TicketService
                 ? $data['priority']
                 : Priority::from($data['priority']);
 
-            // 1. Calculate SLA resolution and warning deadlines
+            // Calculate SLA resolution and warning deadlines
             $deadlines = $this->slaService->calculateDeadlines($priority);
 
-            // 2. Obtain atomic sequential ticket number (e.g. TKT-2026-000001)
+            // Obtain atomic sequential ticket number (e.g. TKT-2026-000001)
             $ticketNumber = $this->numberGenerator->next();
 
-            // 3. Persist the ticket with initial 'open' status
+            // Persist the ticket with initial 'open' status
             $ticket = Ticket::create([
                 'ticket_number' => $ticketNumber,
                 'customer_id' => $customer->id,
@@ -70,7 +70,7 @@ class TicketService
                 'sla_warning_at' => $deadlines['sla_warning_at'],
             ]);
 
-            // 4. Record the immutable 'created' activity audit entry
+            // Record the immutable 'created' activity audit entry
             $this->activityLogger->log(
                 ticket: $ticket,
                 event: ActivityEvent::Created,
@@ -83,7 +83,7 @@ class TicketService
                 description: "Ticket created by {$customer->name}"
             );
 
-            // 5. Store uploaded attachments if provided
+            // Store uploaded attachments if provided
             if (!empty($data['attachments']) && is_array($data['attachments'])) {
                 $disk = config('helpdesk.attachments.disk', 'local');
                 foreach ($data['attachments'] as $file) {

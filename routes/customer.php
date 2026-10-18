@@ -3,7 +3,6 @@
 use App\Http\Controllers\Customer\Auth\AuthController;
 use App\Http\Controllers\Customer\TicketController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AttachmentController;
 
 /*
 |--------------------------------------------------------------------------
