@@ -183,7 +183,7 @@
         </div>
 
         <div class="text-center text-secondary small pt-3">
-            Designed &amp; Developed by <strong>Mazharul Islam</strong> for <strong>Techzu</strong> &bull; Laravel 11
+            Designed &amp; Developed by <strong>Mazharul Islam</strong> for <strong>Techzu</strong> &bull; Laravel 13
         </div>
     </div>
 
